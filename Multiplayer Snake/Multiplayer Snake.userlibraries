@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<eclipse-userlibraries>
+  <library name="org.mapdb:mapdb:1.0.6">
+    <archive path="C:/Users/norri/.m2/repository/org/mapdb/mapdb/1.0.6/mapdb-1.0.6.jar" />
+  </library>
+</eclipse-userlibraries>
+
