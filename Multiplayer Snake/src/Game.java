@@ -31,9 +31,7 @@ public class Game implements KeyListener, WindowListener {
     public final static int BIG_FOOD_BONUS = 3;
     public final static int SNAKE = 4;
     private int[][] grid = null;
-    private int[][] snake = null;
-    private int direction = -1;
-    private int next_direction = -1;
+    private Snake snake = new Snake();
     private int height = 600;
     private int width = 600;
     private int gameSize = 40;
@@ -64,18 +62,18 @@ public class Game implements KeyListener, WindowListener {
         game.mainLoop();
     }
 
-    public static void start(){
+    public static void start() {
         Game game = new Game();
         game.init();
         game.mainLoop();
     }
-
+    
     public Game() {
         super();
         frame = new Frame();
         canvas = new Canvas();
         grid = new int[gameSize][gameSize];
-        snake = new int[gameSize * gameSize][2];
+        snake.setSnake(new int[gameSize * gameSize][2]);
     }
 
     public void init() {
@@ -105,8 +103,8 @@ public class Game implements KeyListener, WindowListener {
         while (!game_over) {
             cycleTime = System.currentTimeMillis();
             if (!paused) {
-                direction = next_direction;
-                moveSnake();
+                snake.setDirection(snake.getNextDirection());
+                moveSnake(snake);
             }
             renderGame();
             cycleTime = System.currentTimeMillis() - cycleTime;
@@ -129,11 +127,12 @@ public class Game implements KeyListener, WindowListener {
             }
         }
         for (int i = 0; i < gameSize * gameSize; i++) {
-            snake[i][0] = -1;
-            snake[i][1] = -1;
+            snake.setSnake(i, 0, -1);
+            snake.setSnake(i, 1, -1);
         }
-        snake[0][0] = gameSize / 2;
-        snake[0][1] = gameSize / 2;
+        snake.setSnake(0, 0, gameSize / 2);
+        snake.setSnake(0, 1, gameSize / 2);
+
         grid[gameSize / 2][gameSize / 2] = SNAKE;
         placeBonus(FOOD_BONUS);
     }
@@ -183,14 +182,14 @@ public class Game implements KeyListener, WindowListener {
                     graph.setColor(Color.RED);
                     graph.drawString("GAME OVER", height / 2 - 30, height / 2);
                     graph.drawString("YOUR SCORE : " + score, height / 2 - 40, height / 2 + 50);
-                    graph.drawString("YOUR TIME : " + getTime(), height / 2 - 42, height / 2 + 100);
+                    //graph.drawString("YOUR TIME : " + getTime(), height / 2 - 42, height / 2 + 100);
                 } else if (paused) {
                     graph.setColor(Color.RED);
                     graph.drawString("PAUSED", height / 2 - 30, height / 2);
                 }
                 graph.setColor(Color.BLACK);
                 graph.drawString("SCORE = " + score, 10, 20);
-                graph.drawString("TIME = " + getTime(), 100, 20); // Clock
+                //graph.drawString("TIME = " + getTime(), 100, 20); // Clock
                 graph.dispose();
             } while (strategy.contentsRestored());
             // Draw image from buffer
@@ -199,32 +198,33 @@ public class Game implements KeyListener, WindowListener {
         } while (strategy.contentsLost());
     }
 
-    private String getTime() {
-        String temps = new String(minute + ":" + seconde);
-        if (direction < 0 || paused)
-            return temps;
+    // TODO Implement time feature(?)
+//    private String getTime() {
+//        String temps = new String(minute + ":" + seconde);
+//        if (direction < 0 || paused)
+//            return temps;
+//
+//        milliseconde++;
+//        if (milliseconde == 14) {
+//            seconde++;
+//            milliseconde = 0;
+//        }
+//        if (seconde == 60) {
+//            seconde = 0;
+//            minute++;
+//        }
+//
+//        return temps;
+//    }
 
-        milliseconde++;
-        if (milliseconde == 14) {
-            seconde++;
-            milliseconde = 0;
-        }
-        if (seconde == 60) {
-            seconde = 0;
-            minute++;
-        }
-
-        return temps;
-    }
-
-    private void moveSnake() {
-        if (direction < 0) {
+    private void moveSnake(Snake movedSnake) {
+        if (movedSnake.getDirection() < 0) {
             return;
         }
         int ymove = 0;
         int xmove = 0;
 
-        switch (direction) {
+        switch (movedSnake.getDirection()) {
             case UP:
                 xmove = 0;
                 ymove = -1;
@@ -246,10 +246,12 @@ public class Game implements KeyListener, WindowListener {
                 ymove = 0;
                 break;
         }
-        int tempx = snake[0][0];
-        int tempy = snake[0][1];
-        int fut_x = snake[0][0] + xmove;
-        int fut_y = snake[0][1] + ymove;
+
+        int tempx = movedSnake.getSnake(0, 0);
+        int tempy = movedSnake.getSnake(0, 1);
+
+        int fut_x = movedSnake.getSnake(0, 0) + xmove;
+        int fut_y = movedSnake.getSnake(0, 1) + ymove;
 
         if (fut_x < 0)
             fut_x = gameSize - 1;
@@ -264,8 +266,8 @@ public class Game implements KeyListener, WindowListener {
             grow++;
             score++;
             placeBonus(FOOD_BONUS);
-
         }
+
         if (grid[fut_x][fut_y] == FOOD_MALUS) {
             grow += 2;
             score--;
@@ -273,33 +275,35 @@ public class Game implements KeyListener, WindowListener {
             grow += 3;
             score += 3;
         }
-        snake[0][0] = fut_x;
-        snake[0][1] = fut_y;
-        if ((grid[snake[0][0]][snake[0][1]] == SNAKE)) {
+        movedSnake.setSnake(0, 0, fut_x);
+        movedSnake.setSnake(0, 1, fut_y);
+        if ((grid[movedSnake.getSnake(0, 0)][movedSnake.getSnake(0,1)] == SNAKE)) {
             gameOver();
             return;
         }
+
         grid[tempx][tempy] = EMPTY;
         int snakex, snakey, i;
         for (i = 1; i < gameSize * gameSize; i++) {
-            if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
+            if ((movedSnake.getSnake(i, 0) < 0) || (snake.getSnake(i, 1) < 0)) {
                 break;
             }
-            grid[snake[i][0]][snake[i][1]] = EMPTY;
-            snakex = snake[i][0];
-            snakey = snake[i][1];
-            snake[i][0] = tempx;
-            snake[i][1] = tempy;
+            grid[movedSnake.getSnake(i, 0)][movedSnake.getSnake(i, 1)] = EMPTY;
+            snakex = movedSnake.getSnake(i, 0);
+            snakey = movedSnake.getSnake(i, 1);
+            movedSnake.setSnake(i, 0, tempx);
+            movedSnake.setSnake(i, 1, tempy);
             tempx = snakex;
             tempy = snakey;
         }
         for (i = 0; i < gameSize * gameSize; i++) {
-            if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
+            if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
                 break;
 
             }
-            grid[snake[i][0]][snake[i][1]] = SNAKE;
+            grid[movedSnake.getSnake(i, 0)][movedSnake.getSnake(i, 1)] = SNAKE;
         }
+
         bonusTime--;
         if (bonusTime == 0) {
             for (i = 0; i < gameSize; i++) {
@@ -319,9 +323,10 @@ public class Game implements KeyListener, WindowListener {
             }
         }
         if (grow > 0) {
-            snake[i][0] = tempx;
-            snake[i][1] = tempy;
-            grid[snake[i][0]][snake[i][1]] = SNAKE;
+            movedSnake.setSnake(i, 0, tempx);
+            movedSnake.setSnake(i, 1, tempy);
+            grid[movedSnake.getSnake(i, 0)][movedSnake.getSnake(i, 1)] = SNAKE;
+
             if (score % 10 == 0) {
                 placeBonus(BIG_FOOD_BONUS);
                 bonusTime = 100;
@@ -364,24 +369,24 @@ public class Game implements KeyListener, WindowListener {
         Dimension dim;
         switch (code) {
             case KeyEvent.VK_UP:
-                if (direction != DOWN) {
-                    next_direction = UP;
+                if (snake.getDirection()  != DOWN) {
+                    snake.setNextDirection(UP);
                 }
                 break;
 
             case KeyEvent.VK_DOWN:
-                if (direction != UP) {
-                    next_direction = DOWN;
+                if (snake.getDirection()  != UP) {
+                    snake.setNextDirection(DOWN);
                 }
                 break;
             case KeyEvent.VK_LEFT:
-                if (direction != RIGHT) {
-                    next_direction = LEFT;
+                if (snake.getDirection() != RIGHT) {
+                    snake.setNextDirection(LEFT);
                 }
                 break;
             case KeyEvent.VK_RIGHT:
-                if (direction != LEFT) {
-                    next_direction = RIGHT;
+                if (snake.getDirection() != LEFT) {
+                    snake.setNextDirection(RIGHT);
                 }
                 break;
             case KeyEvent.VK_F11:
