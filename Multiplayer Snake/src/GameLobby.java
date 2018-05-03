@@ -8,22 +8,11 @@ public class GameLobby implements KeyListener, WindowListener {
 
     private int height = 600;
     private int width = 600;
+    private Frame frame;
 
-    private Frame frame = null;
-    private Canvas canvas = null;
-
-    public static void main(String args[]) {
-        GameLobby lobby = new GameLobby();
-        lobby.init();
-
-
-    }
     public GameLobby(){
-//            super();
         frame = new Frame();
-//        canvas = new Canvas();
-
-
+        this.init();
     }
 
     public void init() {
@@ -40,11 +29,11 @@ public class GameLobby implements KeyListener, WindowListener {
         passField.setBounds(150,180,200,30);
 
         Button login = new Button("Login");
-        login.setBounds(165,220,40,30);
+        login.setBounds(165,220,70,30);
         login.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Username:\t" + userField.getText() + "\nPassword:\t" + passField.getText());
-
+                frame.setVisible(false);
                 //FIX HERE, game window opens but is unresponsive
                 Game.start();
             }
@@ -53,10 +42,11 @@ public class GameLobby implements KeyListener, WindowListener {
         userField.addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent e) { }
             public void mousePressed(MouseEvent e) {
-                if (userField.getText().equals(new String("Username"))) {
-                    userField.setText("");
-
+                if (userField.getText().equals("Username")) {
+                    return;
                 }
+                userField.setText("");
+
             }
             public void mouseReleased(MouseEvent e) {}
             public void mouseEntered(MouseEvent e) {}
@@ -65,14 +55,21 @@ public class GameLobby implements KeyListener, WindowListener {
         passField.addMouseListener(new MouseListener() {
             public void mouseClicked(MouseEvent e) {}
             public void mousePressed(MouseEvent e) {
-                if (passField.getText().equals(new String("Password"))) {
+                if (passField.getText().equals("Password")) {
                     passField.setText("");
-                    passField.setEchoChar('*');
                 }
             }
             public void mouseReleased(MouseEvent e) {}
             public void mouseEntered(MouseEvent e) {}
             public void mouseExited(MouseEvent e) {}
+        });
+
+        passField.addKeyListener(new KeyListener() {
+            public void keyPressed(KeyEvent e) {
+                passField.setEchoChar('*');
+            }
+            public void keyReleased(KeyEvent e) {}
+            public void keyTyped(KeyEvent e) {}
         });
 
         frame.setLayout(null);
