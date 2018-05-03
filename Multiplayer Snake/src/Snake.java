@@ -7,7 +7,9 @@
 
 
 public class Snake {
-    private int[][] snake = null;
+    private int[][] snake = null;       // Represents a Snake object.
+    private int direction = -1;         // Represents the direction the snake is travelling; 0 = UP, 1 = DOWN, 2 = LEFT, 3 = RIGHT.
+    private int next_direction = -1;    // Represents the next direction the snake is travelling.
 
     public int[][] getSnake() {
         return snake;
@@ -27,4 +29,19 @@ public class Snake {
         this.snake[i][j] = value;
     }
 
+    public int getDirection() {
+        return direction;
+    }
+
+    public void setDirection(int direction) {
+        this.direction = direction;
+    }
+
+    public int getNextDirection() {
+        return next_direction;
+    }
+
+    public void setNextDirection(int next_direction) {
+        this.next_direction = next_direction;
+    }
 }
