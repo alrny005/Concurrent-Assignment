@@ -285,7 +285,7 @@ public class Game implements KeyListener, WindowListener {
         grid[tempx][tempy] = EMPTY;
         int snakex, snakey, i;
         for (i = 1; i < gameSize * gameSize; i++) {
-            if ((movedSnake.getSnake(i, 0) < 0) || (snake.getSnake(i, 1) < 0)) {
+            if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
                 break;
             }
             grid[movedSnake.getSnake(i, 0)][movedSnake.getSnake(i, 1)] = EMPTY;
