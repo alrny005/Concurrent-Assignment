@@ -31,7 +31,7 @@ public class Game implements KeyListener, WindowListener {
     public final static int BIG_FOOD_BONUS = 3;
     public final static int SNAKE = 4;
     private int[][] grid = null;
-    private Snake snake = new Snake(); // TODO change this line.
+    private int[][] snake = null;
     private int direction = -1;
     private int next_direction = -1;
     private int height = 600;
@@ -64,12 +64,18 @@ public class Game implements KeyListener, WindowListener {
         game.mainLoop();
     }
 
+    public static void start(){
+        Game game = new Game();
+        game.init();
+        game.mainLoop();
+    }
+
     public Game() {
         super();
         frame = new Frame();
         canvas = new Canvas();
         grid = new int[gameSize][gameSize];
-        snake.setSnake(new int[gameSize * gameSize][2]); // TODO change this line
+        snake = new int[gameSize * gameSize][2];
     }
 
     public void init() {
@@ -123,12 +129,11 @@ public class Game implements KeyListener, WindowListener {
             }
         }
         for (int i = 0; i < gameSize * gameSize; i++) {
-            snake.setSnake(i, 0, -1);   // TODO change this line
-            snake.setSnake(i, 1, -1);   // TODO change this line
+            snake[i][0] = -1;
+            snake[i][1] = -1;
         }
-        snake.setSnake(0, 0, gameSize / 2); // TODO change this line
-        snake.setSnake(0, 1, gameSize / 2); // TODO change this line
-
+        snake[0][0] = gameSize / 2;
+        snake[0][1] = gameSize / 2;
         grid[gameSize / 2][gameSize / 2] = SNAKE;
         placeBonus(FOOD_BONUS);
     }
@@ -241,11 +246,10 @@ public class Game implements KeyListener, WindowListener {
                 ymove = 0;
                 break;
         }
-        int tempx = snake.getSnake(0, 0);   // TODO change this line
-        int tempy = snake.getSnake(0, 1);   // TODO change this line
-
-        int fut_x = snake.getSnake(0, 0) + xmove;   // TODO change this line
-        int fut_y = snake.getSnake(0, 1) + ymove;   // TODO change this line
+        int tempx = snake[0][0];
+        int tempy = snake[0][1];
+        int fut_x = snake[0][0] + xmove;
+        int fut_y = snake[0][1] + ymove;
 
         if (fut_x < 0)
             fut_x = gameSize - 1;
@@ -269,35 +273,33 @@ public class Game implements KeyListener, WindowListener {
             grow += 3;
             score += 3;
         }
-        snake.setSnake(0, 0, fut_x);    // TODO change this line
-        snake.setSnake(0, 1, fut_y);    // TODO change this line
-        if ((grid[snake.getSnake(0, 0)][snake.getSnake(0,1)] == SNAKE)) { // TODO change this line
+        snake[0][0] = fut_x;
+        snake[0][1] = fut_y;
+        if ((grid[snake[0][0]][snake[0][1]] == SNAKE)) {
             gameOver();
             return;
         }
-
         grid[tempx][tempy] = EMPTY;
         int snakex, snakey, i;
         for (i = 1; i < gameSize * gameSize; i++) {
-            if ((snake.getSnake(i, 0) < 0) || (snake.getSnake(i, 1) < 0)) { // TODO change this line
+            if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
                 break;
             }
-            grid[snake.getSnake(i, 0)][snake.getSnake(i, 1)] = EMPTY; // TODO change this line
-            snakex = snake.getSnake(i, 0); // TODO change this line
-            snakey = snake.getSnake(i, 1); // TODO change this line
-            snake.setSnake(i, 0, tempx); // TODO change this line
-            snake.setSnake(i, 1, tempy); // TODO change this line
+            grid[snake[i][0]][snake[i][1]] = EMPTY;
+            snakex = snake[i][0];
+            snakey = snake[i][1];
+            snake[i][0] = tempx;
+            snake[i][1] = tempy;
             tempx = snakex;
             tempy = snakey;
         }
         for (i = 0; i < gameSize * gameSize; i++) {
-            if ((snake.getSnake(i, 0) < 0) || (snake.getSnake(i, 1) < 0)) { // TODO change this line
+            if ((snake[i][0] < 0) || (snake[i][1] < 0)) {
                 break;
 
             }
-            grid[snake.getSnake(i, 0)][snake.getSnake(i, 1)] = SNAKE; // TODO change this line
+            grid[snake[i][0]][snake[i][1]] = SNAKE;
         }
-
         bonusTime--;
         if (bonusTime == 0) {
             for (i = 0; i < gameSize; i++) {
@@ -317,10 +319,9 @@ public class Game implements KeyListener, WindowListener {
             }
         }
         if (grow > 0) {
-            snake.setSnake(i, 0, tempx); // TODO change this line
-            snake.setSnake(i, 1, tempy); // TODO change this line
-            grid[snake.getSnake(i, 0)][snake.getSnake(i, 1)] = SNAKE; // TODO change this line
-
+            snake[i][0] = tempx;
+            snake[i][1] = tempy;
+            grid[snake[i][0]][snake[i][1]] = SNAKE;
             if (score % 10 == 0) {
                 placeBonus(BIG_FOOD_BONUS);
                 bonusTime = 100;
