@@ -57,9 +57,8 @@ public class Game implements KeyListener, WindowListener {
      *            the command line arguments
      */
     public static void main(String[] args) {
-        Game game = new Game();
-        game.init();
-        game.mainLoop();
+        GameLobby gl = new GameLobby();
+
     }
 
     public static void start() {
