@@ -1,10 +1,11 @@
+import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferStrategy;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GameLobby implements KeyListener, WindowListener {
+public class GameLobby implements WindowListener {
 
     private int height = 600;
     private int width = 600;
@@ -19,91 +20,67 @@ public class GameLobby implements KeyListener, WindowListener {
         frame.setSize(width + 7, height + 27);
         frame.setResizable(false);
         frame.setLocationByPlatform(true);
-        frame.addWindowListener(this);
-        frame.dispose();
 
-        TextField userField = new TextField("Username");
-        userField.setBounds(150,150,200,30);
-        TextField passField = new TextField("Password");
+        Label title = new Label("Snake Game");
+        title.setFont(new Font("SansSerif",Font.PLAIN, 30));
 
-        passField.setBounds(150,180,200,30);
+        Label userlb = new Label("Please Enter Username:");
+        Label passlb = new Label("Please Enter Password:");
+        TextField userField = new TextField(15);
+        TextField passField = new TextField(15);
 
         Button login = new Button("Login");
         login.setBounds(165,220,70,30);
         login.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Username:\t" + userField.getText() + "\nPassword:\t" + passField.getText());
-                frame.setVisible(false);
-                //FIX HERE, game window opens but is unresponsive
-                Game.start();
+                frame.dispose();
+
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Game.start();
+                    }
+                });
+                thread.start();
+
             }
         });
 
-        userField.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) { }
-            public void mousePressed(MouseEvent e) {
-                if (userField.getText().equals("Username")) {
-                    return;
-                }
-                userField.setText("");
+        // set panels
+        JPanel labl = new JPanel(new FlowLayout());
+        JPanel sel	= new JPanel(new FlowLayout(FlowLayout.CENTER, 100, 50));
+        // set panel colors
+        labl.setBackground(Color.WHITE);
+        sel.setBackground(Color.lightGray);
 
-            }
-            public void mouseReleased(MouseEvent e) {}
-            public void mouseEntered(MouseEvent e) {}
-            public void mouseExited(MouseEvent e) {}
-        });
-        passField.addMouseListener(new MouseListener() {
-            public void mouseClicked(MouseEvent e) {}
-            public void mousePressed(MouseEvent e) {
-                if (passField.getText().equals("Password")) {
-                    passField.setText("");
-                }
-            }
-            public void mouseReleased(MouseEvent e) {}
-            public void mouseEntered(MouseEvent e) {}
-            public void mouseExited(MouseEvent e) {}
-        });
+        // add label to label panel
+        labl.add(title);
 
-        passField.addKeyListener(new KeyListener() {
-            public void keyPressed(KeyEvent e) {
-                passField.setEchoChar('*');
-            }
-            public void keyReleased(KeyEvent e) {}
-            public void keyTyped(KeyEvent e) {}
-        });
+        // add to sel Panel
+        sel.add(userlb);
+        sel.add(userField);
+        sel.add(passlb);
+        sel.add(passField);
+        sel.add(login);
 
-        frame.setLayout(null);
-        frame.add(userField);
-        frame.add(passField);
-        frame.add(login);
+        // add panels to frame
+        frame.add(labl,BorderLayout.NORTH);
+        frame.add(sel,BorderLayout.CENTER);
+
         frame.setTitle("Login");
         frame.setVisible(true);
 
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-
-    }
 
     @Override
     public void windowOpened(WindowEvent e) {
-
+        System.exit(0);
     }
 
     @Override
     public void windowClosing(WindowEvent e) {
-        System.exit(0);
 
     }
 
