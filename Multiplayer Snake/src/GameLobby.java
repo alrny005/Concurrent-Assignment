@@ -5,7 +5,7 @@ import java.awt.image.BufferStrategy;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class GameLobby implements WindowListener {
+public class GameLobby implements WindowListener,KeyListener {
 
     private int height = 600;
     private int width = 600;
@@ -31,6 +31,13 @@ public class GameLobby implements WindowListener {
 
         Button login = new Button("Login");
         login.setBounds(165,220,70,30);
+
+        Button btn4 = new Button("4 Players");
+        btn4.setBounds(200,220,70,30);
+
+        Button btn100 = new Button("100 Players");
+        btn4.setBounds(250,220,70,30);
+
         login.addActionListener(new ActionListener(){
             public void actionPerformed(ActionEvent e) {
                 System.out.println("Username:\t" + userField.getText() + "\nPassword:\t" + passField.getText());
@@ -43,7 +50,36 @@ public class GameLobby implements WindowListener {
                     }
                 });
                 thread.start();
+            }
+        });
 
+        btn4.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Username:\t" + userField.getText() + "\nPassword:\t" + passField.getText());
+                frame.dispose();
+
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Game.start();
+                    }
+                });
+                thread.start();
+            }
+        });
+
+        btn100.addActionListener(new ActionListener(){
+            public void actionPerformed(ActionEvent e) {
+                System.out.println("Username:\t" + userField.getText() + "\nPassword:\t" + passField.getText());
+                frame.dispose();
+
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Game.start();
+                    }
+                });
+                thread.start();
             }
         });
 
@@ -63,6 +99,8 @@ public class GameLobby implements WindowListener {
         sel.add(passlb);
         sel.add(passField);
         sel.add(login);
+        sel.add(btn4);
+        sel.add(btn100);
 
         // add panels to frame
         frame.add(labl,BorderLayout.NORTH);
@@ -76,6 +114,7 @@ public class GameLobby implements WindowListener {
 
     @Override
     public void windowOpened(WindowEvent e) {
+        frame.dispose();
         System.exit(0);
     }
 
@@ -107,5 +146,17 @@ public class GameLobby implements WindowListener {
     @Override
     public void windowDeactivated(WindowEvent e) {
 
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
     }
 }
