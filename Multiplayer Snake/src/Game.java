@@ -30,8 +30,9 @@ public class Game implements KeyListener, WindowListener {
     public final static int FOOD_MALUS = 2;
     public final static int BIG_FOOD_BONUS = 3;
     public final static int SNAKE = 4;
-    private int[][] grid = null;
+    GameGrid grid = new GameGrid();
     private Snake snake = new Snake();
+    private Snake snake2 = new Snake(); // TODO delete when done
     private int height = 600;
     private int width = 600;
     private int gameSize = 40;
@@ -66,13 +67,15 @@ public class Game implements KeyListener, WindowListener {
         game.init();
         game.mainLoop();
     }
-    
+
     public Game() {
         super();
         frame = new Frame();
         canvas = new Canvas();
-        grid = new int[gameSize][gameSize];
+        int[][] newGrid = new int[gameSize][gameSize];
+        grid.setGrid(newGrid);
         snake.setSnake(new int[gameSize * gameSize][2]);
+        snake2.setSnake(new int[gameSize * gameSize][2]);
     }
 
     public void init() {
@@ -103,7 +106,11 @@ public class Game implements KeyListener, WindowListener {
             cycleTime = System.currentTimeMillis();
             if (!paused) {
                 snake.setDirection(snake.getNextDirection());
+                snake2.setDirection(snake2.getNextDirection());
+
                 moveSnake(snake);
+                moveSnake(snake2);
+
             }
             renderGame();
             cycleTime = System.currentTimeMillis() - cycleTime;
@@ -122,17 +129,23 @@ public class Game implements KeyListener, WindowListener {
         // Initialise tabs
         for (int i = 0; i < gameSize; i++) {
             for (int j = 0; j < gameSize; j++) {
-                grid[i][j] = EMPTY;
+                grid.setStatus(i, j, EMPTY);
             }
         }
         for (int i = 0; i < gameSize * gameSize; i++) {
             snake.setSnake(i, 0, -1);
             snake.setSnake(i, 1, -1);
+
+            snake2.setSnake(i, 0, -1);
+            snake2.setSnake(i, 1, -1);
         }
         snake.setSnake(0, 0, gameSize / 2);
         snake.setSnake(0, 1, gameSize / 2);
 
-        grid[gameSize / 2][gameSize / 2] = SNAKE;
+        snake2.setSnake(0, 0, gameSize / 4);
+        snake2.setSnake(0, 1, gameSize / 4);
+
+        grid.setStatus(gameSize / 2, gameSize / 2, SNAKE);
         placeBonus(FOOD_BONUS);
     }
 
@@ -149,7 +162,7 @@ public class Game implements KeyListener, WindowListener {
                 int gridCase = EMPTY;
                 for (int i = 0; i < gameSize; i++) {
                     for (int j = 0; j < gameSize; j++) {
-                        gridCase = grid[i][j];
+                        gridCase = grid.getGrid(i, j);
                         switch (gridCase) {
                             case SNAKE:
                                 graph.setColor(Color.BLUE);
@@ -216,7 +229,7 @@ public class Game implements KeyListener, WindowListener {
 //        return temps;
 //    }
 
-    private void moveSnake(Snake movedSnake) {
+    private synchronized void moveSnake(Snake movedSnake) {
         if (movedSnake.getDirection() < 0) {
             return;
         }
@@ -261,33 +274,33 @@ public class Game implements KeyListener, WindowListener {
         if (fut_y >= gameSize)
             fut_y = 0;
 
-        if (grid[fut_x][fut_y] == FOOD_BONUS) {
+        if (grid.getGrid(fut_x,fut_y) == FOOD_BONUS) {
             grow++;
             score++;
             placeBonus(FOOD_BONUS);
         }
 
-        if (grid[fut_x][fut_y] == FOOD_MALUS) {
+        if (grid.getGrid(fut_x,fut_y)  == FOOD_MALUS) {
             grow += 2;
             score--;
-        } else if (grid[fut_x][fut_y] == BIG_FOOD_BONUS) {
+        } else if (grid.getGrid(fut_x,fut_y)  == BIG_FOOD_BONUS) {
             grow += 3;
             score += 3;
         }
         movedSnake.setSnake(0, 0, fut_x);
         movedSnake.setSnake(0, 1, fut_y);
-        if ((grid[movedSnake.getSnake(0, 0)][movedSnake.getSnake(0,1)] == SNAKE)) {
+        if ((grid.getGrid(movedSnake.getSnake(0, 0), movedSnake.getSnake(0,1)) == SNAKE)) {
             gameOver();
             return;
         }
 
-        grid[tempx][tempy] = EMPTY;
+        grid.setStatus(tempx, tempy, EMPTY);
         int snakex, snakey, i;
         for (i = 1; i < gameSize * gameSize; i++) {
             if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
                 break;
             }
-            grid[movedSnake.getSnake(i, 0)][movedSnake.getSnake(i, 1)] = EMPTY;
+            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), EMPTY);
             snakex = movedSnake.getSnake(i, 0);
             snakey = movedSnake.getSnake(i, 1);
             movedSnake.setSnake(i, 0, tempx);
@@ -300,15 +313,15 @@ public class Game implements KeyListener, WindowListener {
                 break;
 
             }
-            grid[movedSnake.getSnake(i, 0)][movedSnake.getSnake(i, 1)] = SNAKE;
+            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
         }
 
         bonusTime--;
         if (bonusTime == 0) {
             for (i = 0; i < gameSize; i++) {
                 for (int j = 0; j < gameSize; j++) {
-                    if (grid[i][j] == BIG_FOOD_BONUS)
-                        grid[i][j] = EMPTY;
+                    if (grid.getGrid(i, j) == BIG_FOOD_BONUS)
+                        grid.setStatus(i, j, EMPTY);
                 }
             }
         }
@@ -316,15 +329,15 @@ public class Game implements KeyListener, WindowListener {
         if (malusTime == 0) {
             for (i = 0; i < gameSize; i++) {
                 for (int j = 0; j < gameSize; j++) {
-                    if (grid[i][j] == FOOD_MALUS)
-                        grid[i][j] = EMPTY;
+                    if (grid.getGrid(i, j) == FOOD_MALUS)
+                        grid.setStatus(i, j, EMPTY);
                 }
             }
         }
         if (grow > 0) {
             movedSnake.setSnake(i, 0, tempx);
             movedSnake.setSnake(i, 1, tempy);
-            grid[movedSnake.getSnake(i, 0)][movedSnake.getSnake(i, 1)] = SNAKE;
+            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
 
             if (score % 10 == 0) {
                 placeBonus(BIG_FOOD_BONUS);
@@ -341,8 +354,8 @@ public class Game implements KeyListener, WindowListener {
     private void placeBonus(int bonus_type) {
         int x = (int) (Math.random() * 1000) % gameSize;
         int y = (int) (Math.random() * 1000) % gameSize;
-        if (grid[x][y] == EMPTY) {
-            grid[x][y] = bonus_type;
+        if (grid.getGrid(x, y) == EMPTY) {
+            grid.setStatus(x, y, bonus_type);
         } else {
             placeBonus(bonus_type);
         }
@@ -351,8 +364,8 @@ public class Game implements KeyListener, WindowListener {
     private void placeMalus(int malus_type) {
         int x = (int) (Math.random() * 1000) % gameSize;
         int y = (int) (Math.random() * 1000) % gameSize;
-        if (grid[x][y] == EMPTY) {
-            grid[x][y] = malus_type;
+        if (grid.getGrid(x, y) == EMPTY) {
+            grid.setStatus(x, y, malus_type);
         } else {
             placeMalus(malus_type);
         }
@@ -388,6 +401,29 @@ public class Game implements KeyListener, WindowListener {
                     snake.setNextDirection(RIGHT);
                 }
                 break;
+
+                // Player 2 controls
+            case KeyEvent.VK_W:
+                if (snake2.getDirection() != DOWN) {
+                    snake2.setNextDirection(UP);
+                }
+                break;
+            case KeyEvent.VK_S:
+                if (snake2.getDirection() != UP) {
+                    snake2.setNextDirection(DOWN);
+                }
+                break;
+            case KeyEvent.VK_A:
+                if (snake2.getDirection() != RIGHT) {
+                    snake2.setNextDirection(LEFT);
+                }
+                break;
+            case KeyEvent.VK_D:
+                if (snake2.getDirection() != LEFT) {
+                    snake2.setNextDirection(RIGHT);
+                }
+                break;
+
             case KeyEvent.VK_F11:
                 dim = Toolkit.getDefaultToolkit().getScreenSize();
                 if ((height != dim.height - 50) || (width != dim.height - 50)) {
@@ -445,4 +481,3 @@ public class Game implements KeyListener, WindowListener {
     public void windowDeactivated(WindowEvent we) {
     }
 }
-
