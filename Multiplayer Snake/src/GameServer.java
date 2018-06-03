@@ -1,29 +1,23 @@
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
+
+import java.io.File;
 import java.util.concurrent.*;
 
-public class GameServer {
+public class GameServer {//} implements Runnable{
 
-    public static void main(String[] args){
-        ExecutorService executor = Executors.newFixedThreadPool(4);
+    private String clientUsername;
+    private String clientPassword;
+    private MapDB clientMap = new MapDB();
 
-        for (int i=0; i < 2; i++){
-            Runnable thread = new Runnable(){
-                public void run(){
-                    System.out.println("check for collisions, check if games ended, update score" +
-                            "maybe dont do this > something with players? handle user input?");
-                }
-            };
-            executor.execute(thread);
-        }
 
-        executor.shutdown();
+    ConcurrentHashMap<String, String> userCredentials = new ConcurrentHashMap<String, String>();
 
-        while (!executor.isTerminated()){
-            try{
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        System.out.println("done");
+    public GameServer() {
+        userCredentials = new ConcurrentHashMap<>();
+
+    }
+    public void logInUser(String username, String password){
+        userCredentials.put(username,password);
     }
 }

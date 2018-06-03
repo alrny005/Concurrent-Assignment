@@ -10,6 +10,7 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,7 +36,7 @@ public class Game implements KeyListener, WindowListener {
     private Snake snake2 = new Snake(); // TODO delete when done
     private int height = 600;
     private int width = 600;
-    private int gameSize = 40;
+    private int gameSize = 110;
     private long speed = 70;
     private Frame frame = null;
     private Canvas canvas = null;
@@ -53,13 +54,22 @@ public class Game implements KeyListener, WindowListener {
     private int bonusTime = 0;
     private int malusTime = 0;
 
+
+
+
+
+    static ConcurrentHashMap<Integer,Snake> snakeMap;
     /**
      * @param args
      *            the command line arguments
      */
     public static void main(String[] args) {
-        GameLobby gl = new GameLobby();
-
+        GameServer server = new GameServer();
+        //Thread t1 = new Thread(new GameLobby(server,40));
+        //t1.run();
+        //GameLobby gl = new GameLobby(server,40);
+        GameLobby logins = new GameLobby(server,40);
+        snakeMap = logins.call();
     }
 
     public static void start() {
@@ -290,7 +300,10 @@ public class Game implements KeyListener, WindowListener {
         movedSnake.setSnake(0, 0, fut_x);
         movedSnake.setSnake(0, 1, fut_y);
         if ((grid.getGrid(movedSnake.getSnake(0, 0), movedSnake.getSnake(0,1)) == SNAKE)) {
-            gameOver();
+            //gameOver();
+            // if snakeArray.size() == 0 { game_over = true;}
+            // else {snakeArray.remove(movedSnake); }
+            game_over = true;
             return;
         }
 
@@ -371,9 +384,11 @@ public class Game implements KeyListener, WindowListener {
         }
     }
 
-    private void gameOver() {
+   /*
+   private void gameOver() {
         game_over = true;
     }
+    */
 
     // IMPLEMENTED FUNCTIONS
     public void keyPressed(KeyEvent ke) {
