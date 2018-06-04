@@ -10,15 +10,19 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Peuch
  */
 
 public class Game implements KeyListener, WindowListener {
+    // PLAYER COUNT
+    //  (Select from 1, 4 or 100 players; the latter has 4 real players and 96 AI).
+    private final static int PLAYERS = 5;
+
     // KEYS MAP
     public final static int UP = 0;
     public final static int DOWN = 1;
@@ -32,11 +36,10 @@ public class Game implements KeyListener, WindowListener {
     public final static int BIG_FOOD_BONUS = 3;
     public final static int SNAKE = 4;
     GameGrid grid = new GameGrid();
-    private Snake snake = new Snake();
-    private Snake snake2 = new Snake(); // TODO delete when done
-    private int height = 600;
-    private int width = 600;
-    private int gameSize = 110;
+    static ConcurrentHashMap<Integer,Snake> snakeMap;
+    private int height = 900;
+    private int width = 1200;
+    private int gameSize = 70;
     private long speed = 70;
     private Frame frame = null;
     private Canvas canvas = null;
@@ -54,11 +57,6 @@ public class Game implements KeyListener, WindowListener {
     private int bonusTime = 0;
     private int malusTime = 0;
 
-
-
-
-
-    static ConcurrentHashMap<Integer,Snake> snakeMap;
     /**
      * @param args
      *            the command line arguments
@@ -68,8 +66,9 @@ public class Game implements KeyListener, WindowListener {
         //Thread t1 = new Thread(new GameLobby(server,40));
         //t1.run();
         //GameLobby gl = new GameLobby(server,40);
-        GameLobby logins = new GameLobby(server,40);
+        GameLobby logins = new GameLobby(server, PLAYERS); //TODO changed number of users so loop in initGame works (see TODO there).
         snakeMap = logins.call();
+        start();
     }
 
     public static void start() {
@@ -84,8 +83,6 @@ public class Game implements KeyListener, WindowListener {
         canvas = new Canvas();
         int[][] newGrid = new int[gameSize][gameSize];
         grid.setGrid(newGrid);
-        snake.setSnake(new int[gameSize * gameSize][2]);
-        snake2.setSnake(new int[gameSize * gameSize][2]);
     }
 
     public void init() {
@@ -107,6 +104,8 @@ public class Game implements KeyListener, WindowListener {
 
         strategy = canvas.getBufferStrategy();
         graph = strategy.getDrawGraphics();
+
+        setSnakes();
         initGame();
         renderGame();
     }
@@ -115,12 +114,11 @@ public class Game implements KeyListener, WindowListener {
         while (!game_over) {
             cycleTime = System.currentTimeMillis();
             if (!paused) {
-                snake.setDirection(snake.getNextDirection());
-                snake2.setDirection(snake2.getNextDirection());
-
-                moveSnake(snake);
-                moveSnake(snake2);
-
+                // Move every snake according to the direction it has chosen.
+                for (int i = 0; i < snakeMap.size(); i++){
+                    setDirectionSnake(snakeMap.get(i));
+                    moveSnake(snakeMap.get(i));
+                }
             }
             renderGame();
             cycleTime = System.currentTimeMillis() - cycleTime;
@@ -135,6 +133,19 @@ public class Game implements KeyListener, WindowListener {
         }
     }
 
+    /**
+     * @summary Initialise the value in the snake hashmap based on the number of players.
+     */
+    public void setSnakes() {
+        // TODO 1 of 2: The problem is probably this section of code not initialising the snake objects in the hashmap properly.
+        for (int i = 0; i < snakeMap.size(); i++) {
+            //Snake tempSnake = new Snake();
+            //tempSnake.setSnake(new int[gameSize * gameSize][2]);
+            //snakeMap.put(i, tempSnake);
+            snakeMap.get(i).setSnake(new int[gameSize * gameSize][2]);
+        }
+    }
+
     private void initGame() {
         // Initialise tabs
         for (int i = 0; i < gameSize; i++) {
@@ -142,20 +153,27 @@ public class Game implements KeyListener, WindowListener {
                 grid.setStatus(i, j, EMPTY);
             }
         }
+
+        // TODO 2 of 2: This may also be the code causing the problem.
+        // Initialise every snake in the hashmap.
         for (int i = 0; i < gameSize * gameSize; i++) {
-            snake.setSnake(i, 0, -1);
-            snake.setSnake(i, 1, -1);
-
-            snake2.setSnake(i, 0, -1);
-            snake2.setSnake(i, 1, -1);
+            for (int index = 0; index < snakeMap.size(); index++) {
+                snakeMap.get(index).setSnake(i, 0, -1);
+                snakeMap.get(index).setSnake(i, 1, -1);
+            }
         }
-        snake.setSnake(0, 0, gameSize / 2);
-        snake.setSnake(0, 1, gameSize / 2);
 
-        snake2.setSnake(0, 0, gameSize / 4);
-        snake2.setSnake(0, 1, gameSize / 4);
+        // Initialise every snake onto the grid.
+        for (int i = 0; i < snakeMap.size(); i++) {
+            // TODO still need to set a value that can be unique to 100 snakes within the game board. Value must be a
+            //  factor of the gameSize (currently 70; so any number divisible by 7 works) or else the snake will be
+            //  invisible in the corner until it moves.
+            int value = gameSize / 7 + (i * 7); // Value that will help determine the snake's location on the grid.
+            snakeMap.get(i).setSnake(0, 0, value);
+            snakeMap.get(i).setSnake(0, 1, value);
+            grid.setStatus(value, value, SNAKE);
+        }
 
-        grid.setStatus(gameSize / 2, gameSize / 2, SNAKE);
         placeBonus(FOOD_BONUS);
     }
 
@@ -172,10 +190,38 @@ public class Game implements KeyListener, WindowListener {
                 int gridCase = EMPTY;
                 for (int i = 0; i < gameSize; i++) {
                     for (int j = 0; j < gameSize; j++) {
-                        gridCase = grid.getGrid(i, j);
+                        gridCase = grid.getStatus(i, j);
                         switch (gridCase) {
                             case SNAKE:
-                                graph.setColor(Color.BLUE);
+                                // If the status at a given location is not EMPTY, then it can be assumed that the
+                                //  snake exists in that square.
+                                for (int index = 0; index < snakeMap.size(); index++) {
+                                    // TODO ERROR HAPPENS HERE: getSnake causes ArrayIndexOutOfBoundsException in the Snake class.
+                                    if (snakeMap.get(index).getSnake(i, j) != -1) {
+                                        // Set the colour for Player 1.
+                                        if (index == 0) {
+                                            graph.setColor(Color.BLUE);
+                                        }
+                                        // Set the colour for Player 2.
+                                        else if (index == 1) {
+                                            graph.setColor(Color.RED);
+                                        }
+                                        // Set the colour for Player 3.
+                                        else if (index == 2) {
+                                            graph.setColor(Color.GREEN);
+                                        }
+                                        // Set the colour for Player 4.
+                                        else if (index == 3) {
+                                            graph.setColor(Color.YELLOW);
+                                        }
+                                        // Set the colour for all other AI snakes.
+                                        else {
+                                            graph.setColor(Color.PINK);
+                                        }
+                                    }
+                                }
+
+                                //graph.setColor(snakeMap.get().getSnake(i, j));
                                 graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
                                 break;
 
@@ -239,6 +285,18 @@ public class Game implements KeyListener, WindowListener {
 //        return temps;
 //    }
 
+    /**
+     * @summary Set the direction that the snake is about to travel in.
+     * @param directionSnake
+     */
+    private synchronized void setDirectionSnake(Snake directionSnake) {
+        directionSnake.setDirection(directionSnake.getNextDirection());
+    }
+
+    /**
+     * @summary Move the snake in the direction that is chosen.
+     * @param movedSnake
+     */
     private synchronized void moveSnake(Snake movedSnake) {
         if (movedSnake.getDirection() < 0) {
             return;
@@ -284,27 +342,30 @@ public class Game implements KeyListener, WindowListener {
         if (fut_y >= gameSize)
             fut_y = 0;
 
-        if (grid.getGrid(fut_x,fut_y) == FOOD_BONUS) {
+        if (grid.getStatus(fut_x,fut_y) == FOOD_BONUS) {
             grow++;
             score++;
             placeBonus(FOOD_BONUS);
         }
 
-        if (grid.getGrid(fut_x,fut_y)  == FOOD_MALUS) {
+        if (grid.getStatus(fut_x,fut_y)  == FOOD_MALUS) {
             grow += 2;
             score--;
-        } else if (grid.getGrid(fut_x,fut_y)  == BIG_FOOD_BONUS) {
+        } else if (grid.getStatus(fut_x,fut_y)  == BIG_FOOD_BONUS) {
             grow += 3;
             score += 3;
         }
         movedSnake.setSnake(0, 0, fut_x);
         movedSnake.setSnake(0, 1, fut_y);
-        if ((grid.getGrid(movedSnake.getSnake(0, 0), movedSnake.getSnake(0,1)) == SNAKE)) {
-            //gameOver();
-            // if snakeArray.size() == 0 { game_over = true;}
-            // else {snakeArray.remove(movedSnake); }
+        if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0,1)) == SNAKE)) {
+            if (snakeMap.size() == 0) {
+                game_over = true;
+            }
+            else {
+                snakeMap.remove(movedSnake);
+            }
+
             game_over = true;
-            return;
         }
 
         grid.setStatus(tempx, tempy, EMPTY);
@@ -333,7 +394,7 @@ public class Game implements KeyListener, WindowListener {
         if (bonusTime == 0) {
             for (i = 0; i < gameSize; i++) {
                 for (int j = 0; j < gameSize; j++) {
-                    if (grid.getGrid(i, j) == BIG_FOOD_BONUS)
+                    if (grid.getStatus(i, j) == BIG_FOOD_BONUS)
                         grid.setStatus(i, j, EMPTY);
                 }
             }
@@ -342,7 +403,7 @@ public class Game implements KeyListener, WindowListener {
         if (malusTime == 0) {
             for (i = 0; i < gameSize; i++) {
                 for (int j = 0; j < gameSize; j++) {
-                    if (grid.getGrid(i, j) == FOOD_MALUS)
+                    if (grid.getStatus(i, j) == FOOD_MALUS)
                         grid.setStatus(i, j, EMPTY);
                 }
             }
@@ -367,7 +428,7 @@ public class Game implements KeyListener, WindowListener {
     private void placeBonus(int bonus_type) {
         int x = (int) (Math.random() * 1000) % gameSize;
         int y = (int) (Math.random() * 1000) % gameSize;
-        if (grid.getGrid(x, y) == EMPTY) {
+        if (grid.getStatus(x, y) == EMPTY) {
             grid.setStatus(x, y, bonus_type);
         } else {
             placeBonus(bonus_type);
@@ -377,65 +438,60 @@ public class Game implements KeyListener, WindowListener {
     private void placeMalus(int malus_type) {
         int x = (int) (Math.random() * 1000) % gameSize;
         int y = (int) (Math.random() * 1000) % gameSize;
-        if (grid.getGrid(x, y) == EMPTY) {
+        if (grid.getStatus(x, y) == EMPTY) {
             grid.setStatus(x, y, malus_type);
         } else {
             placeMalus(malus_type);
         }
     }
 
-   /*
-   private void gameOver() {
-        game_over = true;
-    }
-    */
-
     // IMPLEMENTED FUNCTIONS
     public void keyPressed(KeyEvent ke) {
         int code = ke.getKeyCode();
         Dimension dim;
         switch (code) {
+            // Controls for Player 1 (snakes[0]).
             case KeyEvent.VK_UP:
-                if (snake.getDirection()  != DOWN) {
-                    snake.setNextDirection(UP);
+                if (snakeMap.get(0).getDirection()  != DOWN) {
+                    snakeMap.get(0).setNextDirection(UP);
                 }
                 break;
 
             case KeyEvent.VK_DOWN:
-                if (snake.getDirection()  != UP) {
-                    snake.setNextDirection(DOWN);
+                if (snakeMap.get(0).getDirection()  != UP) {
+                    snakeMap.get(0).setNextDirection(DOWN);
                 }
                 break;
             case KeyEvent.VK_LEFT:
-                if (snake.getDirection() != RIGHT) {
-                    snake.setNextDirection(LEFT);
+                if (snakeMap.get(0).getDirection() != RIGHT) {
+                    snakeMap.get(0).setNextDirection(LEFT);
                 }
                 break;
             case KeyEvent.VK_RIGHT:
-                if (snake.getDirection() != LEFT) {
-                    snake.setNextDirection(RIGHT);
+                if (snakeMap.get(0).getDirection() != LEFT) {
+                    snakeMap.get(0).setNextDirection(RIGHT);
                 }
                 break;
 
-                // Player 2 controls
+                // Controls for Player 2 (snakes[1]).
             case KeyEvent.VK_W:
-                if (snake2.getDirection() != DOWN) {
-                    snake2.setNextDirection(UP);
+                if (snakeMap.get(1).getDirection() != DOWN) {
+                    snakeMap.get(1).setNextDirection(UP);
                 }
                 break;
             case KeyEvent.VK_S:
-                if (snake2.getDirection() != UP) {
-                    snake2.setNextDirection(DOWN);
+                if (snakeMap.get(1).getDirection() != UP) {
+                    snakeMap.get(1).setNextDirection(DOWN);
                 }
                 break;
             case KeyEvent.VK_A:
-                if (snake2.getDirection() != RIGHT) {
-                    snake2.setNextDirection(LEFT);
+                if (snakeMap.get(1).getDirection() != RIGHT) {
+                    snakeMap.get(1).setNextDirection(LEFT);
                 }
                 break;
             case KeyEvent.VK_D:
-                if (snake2.getDirection() != LEFT) {
-                    snake2.setNextDirection(RIGHT);
+                if (snakeMap.get(1).getDirection() != LEFT) {
+                    snakeMap.get(1).setNextDirection(RIGHT);
                 }
                 break;
 
@@ -445,8 +501,8 @@ public class Game implements KeyListener, WindowListener {
                     height = dim.height - 50;
                     width = dim.height - 50;
                 } else {
-                    height = 600;
-                    width = 600;
+                    height = 900;
+                    width = 1200;
                 }
                 frame.setSize(width + 7, height + 27);
                 canvas.setSize(width + 7, height + 27);
