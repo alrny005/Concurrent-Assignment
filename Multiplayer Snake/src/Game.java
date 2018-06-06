@@ -10,6 +10,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
+import java.util.ArrayList;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ConcurrentHashMap;
@@ -20,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Game implements KeyListener, WindowListener {
     // PLAYER COUNT
-    //  (Select from 1, 4 or 100 players; the latter has 4 real players and 96 AI).
-    private final static int PLAYERS = 5;
+    //  (Select from 1, 4 or 104 players; the latter has 4 real players and 100 AI).
+    private final static int PLAYERS = 104;
 
     // KEYS MAP
     public final static int UP = 0;
@@ -120,6 +122,16 @@ public class Game implements KeyListener, WindowListener {
         while (!game_over) {
             cycleTime = System.currentTimeMillis();
             if (!paused) {
+                // Set a new randomly generated direction for NPC snakes.
+                if (PLAYERS > 4) {
+                    Random rand = new Random();
+                    for (int i = 4; i < snakeMap.size(); i++) {
+                        int nextDirection = rand.nextInt(3);
+                        snakeMap.get(i).setNextDirection(nextDirection);
+                        setDirectionSnake(snakeMap.get(i));
+                        moveSnake(snakeMap.get(i));
+                    }
+                }
                 // Move every snake according to the direction it has chosen.
                 for (int i = 0; i < snakeMap.size(); i++){
                     setDirectionSnake(snakeMap.get(i));
@@ -167,15 +179,24 @@ public class Game implements KeyListener, WindowListener {
             }
         }
 
-        // Initialise every snake onto the grid.
+        // Initialise every snake onto the grid, making sure no two snakes spawn on the same spot.
+        ArrayList<int[][]> snakeList = new ArrayList<int[][]>();
         for (int i = 0; i < snakeMap.size(); i++) {
-            // TODO still need to set a value that can be unique to 100 snakes within the game board. Value must be a
-            //  factor of the gameSize (currently 70; so any number divisible by 7 works) or else the snake will be
-            //  invisible in the corner until it moves.
-            int value = gameSize / 10 + (i * 10); // Value that will help determine the snake's location on the grid.
-            snakeMap.get(i).setSnake(0, 0, value);
-            snakeMap.get(i).setSnake(0, 1, value);
-            grid.setStatus(value, value, SNAKE);
+            // Randomize x and y values and determine if they're unique or not.
+            boolean safe = false;
+            Random rand = new Random();
+            int xValue = 0;
+            int yValue = 0;
+            while (!safe) {
+                // Make sure the result is always divisible by 10, or else the snakes won't render properly on the grid.
+                xValue = rand.nextInt(gameSize/10) * 10;
+                yValue = rand.nextInt(gameSize/10) * 10;
+
+                if (!snakeList.contains(new int[xValue][yValue])) { safe = true; }
+            }
+            snakeMap.get(i).setSnake(0, 0, xValue);
+            snakeMap.get(i).setSnake(0, 1, yValue);
+            grid.setStatus(xValue, yValue, SNAKE);
         }
 
         placeBonus(FOOD_BONUS);
@@ -374,7 +395,6 @@ public class Game implements KeyListener, WindowListener {
             else {
                 snakeMap.remove(movedSnake);
             }
-            //game_over = true;
         }
 
         grid.setStatus(tempx, tempy, EMPTY);
