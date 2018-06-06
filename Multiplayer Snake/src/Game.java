@@ -193,36 +193,39 @@ public class Game implements KeyListener, WindowListener {
                             case SNAKE:
                                 // If the status at a given location is not EMPTY, then it can be assumed that the
                                 //  snake exists in that square.
-                                for (int index = 0; index < snakeMap.size(); index++) {
-                                    // TODO Example of how we need to use snakeMap to draw the snakes.
-                                    // System.out.println(snakeMap.get(index));
-                                    if (snakeMap.get(index).getSnake() == new int[i][j]) {
-                                        // Set the colour for Player 1.
-                                        if (index == 0) {
-                                            graph.setColor(Color.BLUE);
-                                        }
-                                        // Set the colour for Player 2.
-                                        else if (index == 1) {
-                                            graph.setColor(Color.RED);
-                                        }
-                                        // Set the colour for Player 3.
-                                        else if (index == 2) {
-                                            graph.setColor(Color.GREEN);
-                                        }
-                                        // Set the colour for Player 4.
-                                        else if (index == 3) {
-                                            graph.setColor(Color.YELLOW);
-                                        }
-                                        // Set the colour for all other AI snakes.
-                                        else {
-                                            graph.setColor(Color.PINK);
-                                        }
 
-                                        graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
-                                    }
-                                }
+//                                for (int index = 0; index < snakeMap.size(); index++) {
+//                                    // TODO Example of how we need to use snakeMap to draw the snakes.
+//                                    // System.out.println(snakeMap.get(index));
+//                                    if (snakeMap.get(index).getSnake() == new int[i][j]) {
+//                                        // Set the colour for Player 1.
+//                                        if (index == 0) {
+//                                            graph.setColor(Color.BLUE);
+//                                        }
+//                                        // Set the colour for Player 2.
+//                                        else if (index == 1) {
+//                                            graph.setColor(Color.RED);
+//                                        }
+//                                        // Set the colour for Player 3.
+//                                        else if (index == 2) {
+//                                            graph.setColor(Color.GREEN);
+//                                        }
+//                                        // Set the colour for Player 4.
+//                                        else if (index == 3) {
+//                                            graph.setColor(Color.YELLOW);
+//                                        }
+//                                        // Set the colour for all other AI snakes.
+//                                        else {
+//                                            graph.setColor(Color.PINK);
+//                                        }
+//
+//                                        graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
+//                                    }
+//                                }
 
-                                //graph.setColor(snakeMap.get().getSnake(i, j));
+                                //graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
+
+                                graph.setColor(Color.BLACK);
                                 graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
                                 break;
 
