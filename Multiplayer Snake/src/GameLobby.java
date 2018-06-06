@@ -1,21 +1,29 @@
-import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class GameLobby implements Callable { // implements WindowListener,KeyListener {
+public class GameLobby implements Runnable {
     GameServer server;
-    private int userCount;
-    ConcurrentHashMap<Integer,Snake> snakeMap = new ConcurrentHashMap<Integer, Snake>();
-    public GameLobby(GameServer _server, int users){
-        server = _server;
-        userCount = users;
+    private int user;
+    ConcurrentHashMap<Integer,Snake> snakeMap;
+
+    /**
+     * Constructor for the GameLobby Runnable, allows the thread to get a reference for the server and snake hashmap
+     * as well as the index of the player
+     * @param serverRef - references the GameServer instantiated in the Game class
+     * @param userIndex - finds the index for the user to be added, used as an ID in the concurrent hashmap
+     * @param mapRef - references the ConcurrentHashMap instantiated in the Game class
+     */
+    public GameLobby(GameServer serverRef, int userIndex, ConcurrentHashMap<Integer,Snake> mapRef){
+        server = serverRef;
+        user = userIndex;
+        snakeMap = mapRef;
     }
 
+    /**
+     * when the thread is run, a user is logged in and a snake is being added to the concurrent hashmap
+     */
     @Override
-    public ConcurrentHashMap call() {
-        for (int i=0; i<userCount;i++){
-            server.logInUser("user"+i,"pass"+i);
-            snakeMap.put(i,new Snake());
-        }
-        return snakeMap;
+    public void run() {
+        server.logInUser("user"+user,"pass"+user);
+        snakeMap.put(user,new Snake());
     }
 }

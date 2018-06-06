@@ -66,8 +66,14 @@ public class Game implements KeyListener, WindowListener {
         //Thread t1 = new Thread(new GameLobby(server,40));
         //t1.run();
         //GameLobby gl = new GameLobby(server,40);
-        GameLobby logins = new GameLobby(server, PLAYERS); //TODO changed number of users so loop in initGame works (see TODO there).
-        snakeMap = logins.call();
+        snakeMap = new ConcurrentHashMap<Integer,Snake>();
+        //GameLobby logins = new GameLobby(server, PLAYERS); //TODO changed number of users so loop in initGame works (see TODO there).
+        //snakeMap = logins.call();
+        Thread loginThread;
+        for (int i=0; i<PLAYERS; i++) {
+            loginThread = new Thread(new GameLobby(server,i,snakeMap));
+            loginThread.run();
+        }
         start();
     }
 
