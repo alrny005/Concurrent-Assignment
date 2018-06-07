@@ -1,9 +1,9 @@
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GameLobby implements Runnable {
-    GameServer server;
+    private GameServer server;
     private int user;
-    ConcurrentHashMap<Integer,Snake> snakeMap;
+    private ConcurrentHashMap<Integer,Snake> snakeMap;
 
     /**
      * Constructor for the GameLobby Runnable, allows the thread to get a reference for the server and snake hashmap
