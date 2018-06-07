@@ -12,6 +12,8 @@ import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.concurrent.ConcurrentHashMap;
@@ -23,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Game implements KeyListener, WindowListener {
     // PLAYER COUNT
     //  (Select from 1, 4 or 104 players; the latter has 4 real players and 100 AI).
-    private final static int PLAYERS = 10;
+    private final static int PLAYERS = 100;
 
     // KEYS MAP
     public final static int UP = 0;
@@ -59,6 +61,8 @@ public class Game implements KeyListener, WindowListener {
     private int bonusTime = 0;
     private int malusTime = 0;
 
+
+    private ExecutorService gameExecutor;
     /**
      * @param args
      *            the command line arguments
@@ -118,38 +122,17 @@ public class Game implements KeyListener, WindowListener {
     }
 
     public void mainLoop() {
+        //executorservice
         while (!game_over) {
             cycleTime = System.currentTimeMillis();
             if (!paused) {
+
                 // Set a new randomly generated direction for NPC snakes.
                 if (PLAYERS > 4) {
-                    Random rand = new Random();
-                    for (int i = 4; i < PLAYERS; i++) {
-                        if(snakeMap.get(i) != null) {
-                            int nextDirection = rand.nextInt(4);
-                            int directionChecker = snakeMap.get(i).getDirection();
-                            if (directionChecker == 0 && nextDirection == 1) {
-                                nextDirection++;
-                            } else if (directionChecker == 1 && nextDirection == 0) {
-                                nextDirection--;
-                            } else if (directionChecker == 2 && nextDirection == 3) {
-                                nextDirection++;
-                            } else if (directionChecker == 3 && nextDirection == 2) {
-                                nextDirection--;
-                            } else {
-                                snakeMap.get(i).setNextDirection(nextDirection);
-                                setDirectionSnake(snakeMap.get(i));
-                                moveSnake(snakeMap.get(i), i);
-                            }
-                        }
-                    }
-                }
-                // Move every snake according to the direction it has chosen.
-                for (int i = 0; i < snakeMap.size(); i++){
-                    try {
-                        setDirectionSnake(snakeMap.get(i));
-                        moveSnake(snakeMap.get(i), i);
-                    } catch (NullPointerException e) {}
+
+                    gameExecutor.submit(new Thread(new GameRun(0,PLAYERS,snakeMap,this)));
+                    gameExecutor.submit(new Thread(new GameRun(1,PLAYERS,snakeMap,this)));
+                    gameExecutor.submit(new Thread(new GameRun(2,PLAYERS,snakeMap,this)));
                 }
             }
             renderGame();
@@ -170,9 +153,6 @@ public class Game implements KeyListener, WindowListener {
      */
     public void setSnakes() {
         for (int i = 0; i < snakeMap.size(); i++) {
-            //Snake tempSnake = new Snake();
-            //tempSnake.setSnake(new int[gameSize * gameSize][2]);
-            //snakeMap.put(i, tempSnake);
             if(snakeMap.get(i) != null) {
                 snakeMap.get(i).setSnake(new int[gameSize * gameSize][2]);
             }
@@ -186,7 +166,7 @@ public class Game implements KeyListener, WindowListener {
                 grid.setStatus(i, j, EMPTY);
             }
         }
-
+        gameExecutor = Executors.newFixedThreadPool(3);
         // Initialise every snake in the hashmap.
         for (int i = 0; i < gameSize * gameSize; i++) {
             for (int index = 0; index < snakeMap.size(); index++) {
@@ -238,40 +218,6 @@ public class Game implements KeyListener, WindowListener {
                         gridCase = grid.getStatus(i, j);
                         switch (gridCase) {
                             case SNAKE:
-                                // If the status at a given location is not EMPTY, then it can be assumed that the
-                                //  snake exists in that square.
-
-//                                for (int index = 0; index < snakeMap.size(); index++) {
-//                                    // TODO Example of how we need to use snakeMap to draw the snakes.
-//                                    // System.out.println(snakeMap.get(index));
-//                                    if (snakeMap.get(index).getSnake() == new int[i][j]) {
-//                                        // Set the colour for Player 1.
-//                                        if (index == 0) {
-//                                            graph.setColor(Color.BLUE);
-//                                        }
-//                                        // Set the colour for Player 2.
-//                                        else if (index == 1) {
-//                                            graph.setColor(Color.RED);
-//                                        }
-//                                        // Set the colour for Player 3.
-//                                        else if (index == 2) {
-//                                            graph.setColor(Color.GREEN);
-//                                        }
-//                                        // Set the colour for Player 4.
-//                                        else if (index == 3) {
-//                                            graph.setColor(Color.YELLOW);
-//                                        }
-//                                        // Set the colour for all other AI snakes.
-//                                        else {
-//                                            graph.setColor(Color.PINK);
-//                                        }
-//
-//                                        graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
-//                                    }
-//                                }
-
-                                //graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
-
                                 graph.setColor(Color.BLACK);
                                 graph.fillOval(i * gridUnit, j * gridUnit, gridUnit, gridUnit);
                                 break;
@@ -316,26 +262,6 @@ public class Game implements KeyListener, WindowListener {
             Toolkit.getDefaultToolkit().sync();
         } while (strategy.contentsLost());
     }
-
-    // TODO Implement time feature(?)
-//    private String getTime() {
-//        String temps = new String(minute + ":" + seconde);
-//        if (direction < 0 || paused)
-//            return temps;
-//
-//        milliseconde++;
-//        if (milliseconde == 14) {
-//            seconde++;
-//            milliseconde = 0;
-//        }
-//        if (seconde == 60) {
-//            seconde = 0;
-//            minute++;
-//        }
-//
-//        return temps;
-//    }
-
     /**
      * @summary Set the direction that the snake is about to travel in.
      * @param directionSnake
@@ -348,7 +274,7 @@ public class Game implements KeyListener, WindowListener {
      * @summary Move the snake in the direction that is chosen.
      * @param movedSnake
      */
-    private synchronized void moveSnake(Snake movedSnake, int index) {
+    public synchronized void moveSnake(Snake movedSnake, int index) {
         if (movedSnake.getDirection() < 0) {
             return;
         }
