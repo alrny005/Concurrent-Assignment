@@ -5,11 +5,9 @@ public class Client {
     private String password;
 
 
-    ConcurrentHashMap<String, String> clients;
 
     Client(String ID, String pass) {
         clientID = ID;
-        clients.put(clientID,password);
     }
 
     public String getID() {
