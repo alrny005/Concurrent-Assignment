@@ -19,9 +19,6 @@ public class GameRun implements  Runnable {
 
     public void run() {
         for (int i = 4+offset; i < playerCount; i +=3) {
-//            if (playerCount > 4) {
-//                Random rand = new Random();
-//            }
             if (snakeMap.get(i) != null) {
                 int nextDirection = rand.nextInt(4);
                 int directionChecker = snakeMap.get(i).getDirection();
@@ -35,7 +32,6 @@ public class GameRun implements  Runnable {
                     nextDirection--;
                 } else {
                     snakeMap.get(i).setNextDirection(nextDirection);
-                    //setDirectionSnake(snakeMap.get(i));
                     snakeMap.get(i).setDirection(snakeMap.get(i).getNextDirection());
                     thisGame.moveSnake(snakeMap.get(i), i);
                 }

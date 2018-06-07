@@ -23,9 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 public class Game implements KeyListener, WindowListener {
-    // PLAYER COUNT
-    //  (Select from 1, 4 or 104 players; the latter has 4 real players and 100 AI).
-    private final static int PLAYERS = 100;
+
+    private final static int PLAYERS = 10;
 
     // KEYS MAP
     public final static int UP = 0;
@@ -55,7 +54,6 @@ public class Game implements KeyListener, WindowListener {
     private int score = 0;
     private int grow = 0;
 
-    private int seconde, minute, milliseconde = 0; // Clock values
     private long cycleTime = 0;
     private long sleepTime = 0;
     private int bonusTime = 0;
@@ -118,12 +116,9 @@ public class Game implements KeyListener, WindowListener {
     }
 
     public void mainLoop() {
-        //executorservice
         while (!game_over) {
             cycleTime = System.currentTimeMillis();
             if (!paused) {
-
-                // Set a new randomly generated direction for NPC snakes.
                 gameExecutor.submit(new Thread(new GameRun(0, PLAYERS, snakeMap, this)));
                 gameExecutor.submit(new Thread(new GameRun(1, PLAYERS, snakeMap, this)));
                 gameExecutor.submit(new Thread(new GameRun(2, PLAYERS, snakeMap, this)));
@@ -256,14 +251,6 @@ public class Game implements KeyListener, WindowListener {
             strategy.show();
             Toolkit.getDefaultToolkit().sync();
         } while (strategy.contentsLost());
-    }
-
-    /**
-     * @param directionSnake
-     * @summary Set the direction that the snake is about to travel in.
-     */
-    private synchronized void setDirectionSnake(Snake directionSnake) {
-        directionSnake.setDirection(directionSnake.getNextDirection());
     }
 
     /**

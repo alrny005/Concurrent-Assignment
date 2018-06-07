@@ -10,14 +10,6 @@ public class GameGrid {
     private int[][] grid = null;
 
     /**
-     * @summary Retrieve the grid int array.
-     * @return grid[][]
-     */
-    public synchronized int[][] getGrid() {
-        return grid;
-    }
-
-    /**
      * @summary Make this grid int array equal to the argument int array.
      * @param grid
      */
