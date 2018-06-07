@@ -1,5 +1,3 @@
-import java.util.concurrent.ConcurrentHashMap;
-
 public class Client {
     private String clientID;
     private String password;
@@ -8,6 +6,7 @@ public class Client {
 
     Client(String ID, String pass) {
         clientID = ID;
+        password = pass;
     }
 
     public String getID() {

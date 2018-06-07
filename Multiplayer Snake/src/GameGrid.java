@@ -1,3 +1,5 @@
+import java.util.concurrent.ConcurrentHashMap;
+
 /**
  * A GameGrid class that represents the grid on which the game of Snake will be played on.
  * This class has synchronized methods so that it is able to safely communicate (thread-wise) with the Snake threads.
@@ -7,13 +9,14 @@
  */
 
 public class GameGrid {
-    private int[][] grid = null;
+//    private int[][] grid = null;
+    private ConcurrentHashMap<Integer,Integer> grid;
 
     /**
      * @summary Make this grid int array equal to the argument int array.
      * @param grid
      */
-    public synchronized void setGrid(int[][] grid) {
+    public synchronized void setGrid(ConcurrentHashMap<Integer,Integer> grid) {
         this.grid = grid;
     }
 
@@ -30,7 +33,7 @@ public class GameGrid {
      * @return grid[i][j]
      */
     public synchronized int getStatus(int i, int j) {
-        return grid[i][j];
+        return grid.get((j*1000)+i);
     }
 
     /**
@@ -40,6 +43,7 @@ public class GameGrid {
      * @param status
      */
     public synchronized void setStatus(int i, int j, int status) {
-        grid[i][j] = status;
+        grid.put(((j*1000)+i),status);
+//        grid[i][j] = status;
     }
 }

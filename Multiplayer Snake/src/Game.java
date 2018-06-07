@@ -24,7 +24,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Game implements KeyListener, WindowListener {
 
-    private final static int PLAYERS = 10;
+    private final static int PLAYERS = 100;
 
     // KEYS MAP
     private final static int UP = 0;
@@ -89,7 +89,11 @@ public class Game implements KeyListener, WindowListener {
         super();
         frame = new Frame();
         canvas = new Canvas();
-        int[][] newGrid = new int[gameSize][gameSize];
+//        int[][] newGrid = new int[gameSize][gameSize];
+        ConcurrentHashMap<Integer,Integer> newGrid = new ConcurrentHashMap<>();
+        for (int i=0; i<gameSize*gameSize; i++){
+            newGrid.put(i,0);
+        }
         grid.setGrid(newGrid);
     }
 
