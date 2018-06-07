@@ -18,12 +18,24 @@ public class GameLobby implements Runnable {
         snakeMap = mapRef;
     }
 
+    int count = 0;
     /**
      * when the thread is run, a user is logged in and a snake is being added to the concurrent hashmap
      */
     @Override
-    public void run() {
+    public synchronized void run() {
+        while (count == 1){
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            count+=1;
+        }
         server.logInUser("user"+user,"pass"+user);
         snakeMap.put(user,new Snake());
+//        System.out.println(Thread.currentThread().getName()+" is moving "+ user);
+
     }
 }
+
