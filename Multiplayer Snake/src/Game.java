@@ -281,6 +281,7 @@ public class Game implements KeyListener, WindowListener {
         if (fut_y >= gameSize)
             fut_y = 0;
 
+        //TODO move
         if (grid.getStatus(fut_x, fut_y) == FOOD_BONUS) {
             grow++;
             score++;
@@ -294,8 +295,11 @@ public class Game implements KeyListener, WindowListener {
             grow += 3;
             score += 3;
         }
+        // until here
         movedSnake.setSnake(0, 0, fut_x);
         movedSnake.setSnake(0, 1, fut_y);
+        
+        //TODO move
         if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
             if (snakeMap.size() == 1) {
                 game_over = true;
@@ -310,12 +314,15 @@ public class Game implements KeyListener, WindowListener {
         }
 
         grid.setStatus(tempx, tempy, EMPTY);
+        //until here
         int snakex, snakey, i;
         for (i = 1; i < gameSize * gameSize; i++) {
             if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
                 break;
             }
+            //TODO move line with ^^^ if and for
             grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), EMPTY);
+            
             snakex = movedSnake.getSnake(i, 0);
             snakey = movedSnake.getSnake(i, 1);
             movedSnake.setSnake(i, 0, tempx);
@@ -323,12 +330,15 @@ public class Game implements KeyListener, WindowListener {
             tempx = snakex;
             tempy = snakey;
         }
+        
+        //TODO move
         for (i = 0; i < gameSize * gameSize; i++) {
             if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
                 break;
 
             }
             grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
+            
         }
 
         bonusTime--;
@@ -364,6 +374,7 @@ public class Game implements KeyListener, WindowListener {
             }
             grow--;
         }
+        //until here
     }
 
     private void placeBonus(int bonus_type) {
