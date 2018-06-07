@@ -23,7 +23,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Game implements KeyListener, WindowListener {
     // PLAYER COUNT
     //  (Select from 1, 4 or 104 players; the latter has 4 real players and 100 AI).
-    private final static int PLAYERS = 104;
+    private final static int PLAYERS = 10;
 
     // KEYS MAP
     public final static int UP = 0;
@@ -124,7 +124,7 @@ public class Game implements KeyListener, WindowListener {
                 // Set a new randomly generated direction for NPC snakes.
                 if (PLAYERS > 4) {
                     Random rand = new Random();
-                    for (int i = 4; i < snakeMap.size(); i++) {
+                    for (int i = 4; i < PLAYERS; i++) {
                         if(snakeMap.get(i) != null) {
                             int nextDirection = rand.nextInt(4);
                             int directionChecker = snakeMap.get(i).getDirection();
@@ -414,7 +414,8 @@ public class Game implements KeyListener, WindowListener {
             }
             else {
 
-                movedSnake.setSnake(0, 0, -10);
+                grid.setStatus(movedSnake.getSnake(0,0),movedSnake.getSnake(0,1),EMPTY);
+                    movedSnake.setSnake(0, 0, -10);
                 movedSnake.setSnake(0, 1, -10);
                 snakeMap.remove(index);
 
@@ -598,7 +599,7 @@ public class Game implements KeyListener, WindowListener {
                         snakeMap.get(3).setNextDirection(LEFT);
                     }
                     break;
-                case KeyEvent.VK_COLON:
+                case KeyEvent.VK_SEMICOLON:
                     if (snakeMap.get(3).getDirection() != LEFT) {
                         snakeMap.get(3).setNextDirection(RIGHT);
                     }
