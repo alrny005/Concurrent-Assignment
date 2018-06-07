@@ -1,9 +1,10 @@
 import java.util.concurrent.ConcurrentHashMap;
 
 public class GameLobby implements Runnable {
-    private GameServer server;
+    GameServer server;
     private int user;
-    private ConcurrentHashMap<Integer,Snake> snakeMap;
+    ConcurrentHashMap<Integer,Snake> snakeMap;
+    ConcurrentHashMap<Integer, Client> lobby;
 
     /**
      * Constructor for the GameLobby Runnable, allows the thread to get a reference for the server and snake hashmap
@@ -24,11 +25,23 @@ public class GameLobby implements Runnable {
      */
     @Override
     public synchronized void run() {
+        while (count == 1){
+            try {
+                this.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        lobby.put(user,new Client("user"+user, "pass"+user));
 
-        server.logInUser("user"+user,"pass"+user);
-        snakeMap.put(user,new Snake());
-//        System.out.println(Thread.currentThread().getName()+" is moving "+ user);
+        count += 1;
+        this.notifyAll();
 
     }
-}
 
+
+
+
+
+
+}
