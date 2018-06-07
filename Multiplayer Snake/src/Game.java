@@ -69,7 +69,6 @@ public class Game implements KeyListener, WindowListener {
         //t1.run();
         //GameLobby gl = new GameLobby(server,40);
         snakeMap = new ConcurrentHashMap<Integer,Snake>();
-        //GameLobby logins = new GameLobby(server, PLAYERS); //TODO changed number of users so loop in initGame works (see TODO there).
         //snakeMap = logins.call();
         Thread loginThread;
         for (int i=0; i<PLAYERS; i++) {
@@ -126,11 +125,22 @@ public class Game implements KeyListener, WindowListener {
                 if (PLAYERS > 4) {
                     Random rand = new Random();
                     for (int i = 4; i < snakeMap.size(); i++) {
-                        int nextDirection = rand.nextInt(3);
                         if(snakeMap.get(i) != null) {
-                            snakeMap.get(i).setNextDirection(nextDirection);
-                            setDirectionSnake(snakeMap.get(i));
-                            moveSnake(snakeMap.get(i), i);
+                            int nextDirection = rand.nextInt(4);
+                            int directionChecker = snakeMap.get(i).getDirection();
+                            if (directionChecker == 0 && nextDirection == 1) {
+                                nextDirection++;
+                            } else if (directionChecker == 1 && nextDirection == 0) {
+                                nextDirection--;
+                            } else if (directionChecker == 2 && nextDirection == 3) {
+                                nextDirection++;
+                            } else if (directionChecker == 3 && nextDirection == 2) {
+                                nextDirection--;
+                            } else {
+                                snakeMap.get(i).setNextDirection(nextDirection);
+                                setDirectionSnake(snakeMap.get(i));
+                                moveSnake(snakeMap.get(i), i);
+                            }
                         }
                     }
                 }
