@@ -127,15 +127,19 @@ public class Game implements KeyListener, WindowListener {
                     Random rand = new Random();
                     for (int i = 4; i < snakeMap.size(); i++) {
                         int nextDirection = rand.nextInt(3);
-                        snakeMap.get(i).setNextDirection(nextDirection);
-                        setDirectionSnake(snakeMap.get(i));
-                        moveSnake(snakeMap.get(i));
+                        if(snakeMap.get(i) != null) {
+                            snakeMap.get(i).setNextDirection(nextDirection);
+                            setDirectionSnake(snakeMap.get(i));
+                            moveSnake(snakeMap.get(i), i);
+                        }
                     }
                 }
                 // Move every snake according to the direction it has chosen.
                 for (int i = 0; i < snakeMap.size(); i++){
-                    setDirectionSnake(snakeMap.get(i));
-                    moveSnake(snakeMap.get(i));
+                    try {
+                        setDirectionSnake(snakeMap.get(i));
+                        moveSnake(snakeMap.get(i), i);
+                    } catch (NullPointerException e) {}
                 }
             }
             renderGame();
@@ -159,7 +163,9 @@ public class Game implements KeyListener, WindowListener {
             //Snake tempSnake = new Snake();
             //tempSnake.setSnake(new int[gameSize * gameSize][2]);
             //snakeMap.put(i, tempSnake);
-            snakeMap.get(i).setSnake(new int[gameSize * gameSize][2]);
+            if(snakeMap.get(i) != null) {
+                snakeMap.get(i).setSnake(new int[gameSize * gameSize][2]);
+            }
         }
     }
 
@@ -174,8 +180,10 @@ public class Game implements KeyListener, WindowListener {
         // Initialise every snake in the hashmap.
         for (int i = 0; i < gameSize * gameSize; i++) {
             for (int index = 0; index < snakeMap.size(); index++) {
-                snakeMap.get(index).setSnake(i, 0, -1);
-                snakeMap.get(index).setSnake(i, 1, -1);
+                if(snakeMap.get(i) != null) {
+                    snakeMap.get(index).setSnake(i, 0, -1);
+                    snakeMap.get(index).setSnake(i, 1, -1);
+                }
             }
         }
 
@@ -194,8 +202,10 @@ public class Game implements KeyListener, WindowListener {
 
                 if (!snakeList.contains(new int[xValue][yValue])) { safe = true; }
             }
-            snakeMap.get(i).setSnake(0, 0, xValue);
-            snakeMap.get(i).setSnake(0, 1, yValue);
+            if(snakeMap.get(i) != null ) {
+                snakeMap.get(i).setSnake(0, 0, xValue);
+                snakeMap.get(i).setSnake(0, 1, yValue);
+            }
             grid.setStatus(xValue, yValue, SNAKE);
         }
 
@@ -328,7 +338,7 @@ public class Game implements KeyListener, WindowListener {
      * @summary Move the snake in the direction that is chosen.
      * @param movedSnake
      */
-    private synchronized void moveSnake(Snake movedSnake) {
+    private synchronized void moveSnake(Snake movedSnake, int index) {
         if (movedSnake.getDirection() < 0) {
             return;
         }
@@ -393,7 +403,11 @@ public class Game implements KeyListener, WindowListener {
                 game_over = true;
             }
             else {
-                snakeMap.remove(movedSnake);
+
+                movedSnake.setSnake(0, 0, -10);
+                movedSnake.setSnake(0, 1, -10);
+                snakeMap.remove(index);
+
             }
         }
 
@@ -478,95 +492,111 @@ public class Game implements KeyListener, WindowListener {
     public void keyPressed(KeyEvent ke) {
         int code = ke.getKeyCode();
         Dimension dim;
+        // Controls for Player 1 (snakeMap[0]).
+        if (snakeMap.get(0) != null) {
+            switch (code) {
+                case KeyEvent.VK_UP:
+                    if (snakeMap.get(0).getDirection() != DOWN) {
+                        snakeMap.get(0).setNextDirection(UP);
+                    }
+                    break;
+                case KeyEvent.VK_DOWN:
+                    if (snakeMap.get(0).getDirection() != UP) {
+                        snakeMap.get(0).setNextDirection(DOWN);
+                    }
+                    break;
+                case KeyEvent.VK_LEFT:
+                    if (snakeMap.get(0).getDirection() != RIGHT) {
+                        snakeMap.get(0).setNextDirection(LEFT);
+                    }
+                    break;
+                case KeyEvent.VK_RIGHT:
+                    if (snakeMap.get(0).getDirection() != LEFT) {
+                        snakeMap.get(0).setNextDirection(RIGHT);
+                    }
+                    break;
+            }
+        }
+        // Controls for Player 2 (snakeMap[1]).
+
+        if (snakeMap.get(1) != null) {
+            switch (code) {
+                case KeyEvent.VK_W:
+                    if (snakeMap.get(1).getDirection() != DOWN) {
+                        snakeMap.get(1).setNextDirection(UP);
+                    }
+                    break;
+                case KeyEvent.VK_S:
+                    if (snakeMap.get(1).getDirection() != UP) {
+                        snakeMap.get(1).setNextDirection(DOWN);
+                    }
+                    break;
+                case KeyEvent.VK_A:
+                    if (snakeMap.get(1).getDirection() != RIGHT) {
+                        snakeMap.get(1).setNextDirection(LEFT);
+                    }
+                    break;
+                case KeyEvent.VK_D:
+                    if (snakeMap.get(1).getDirection() != LEFT) {
+                        snakeMap.get(1).setNextDirection(RIGHT);
+                    }
+                    break;
+            }
+        }
+        // Controls for Player 3 (snakeMap[2])
+
+        if (snakeMap.get(2) != null) {
+            switch (code) {
+                case KeyEvent.VK_Y:
+                    if (snakeMap.get(2).getDirection() != DOWN) {
+                        snakeMap.get(2).setNextDirection(UP);
+                    }
+                    break;
+                case KeyEvent.VK_H:
+                    if (snakeMap.get(2).getDirection() != UP) {
+                        snakeMap.get(2).setNextDirection(DOWN);
+                    }
+                    break;
+                case KeyEvent.VK_G:
+                    if (snakeMap.get(2).getDirection() != RIGHT) {
+                        snakeMap.get(2).setNextDirection(LEFT);
+                    }
+                    break;
+                case KeyEvent.VK_J:
+                    if (snakeMap.get(2).getDirection() != LEFT) {
+                        snakeMap.get(2).setNextDirection(RIGHT);
+                    }
+                    break;
+            }
+        }
+        // Controls for Player 4 (snakeMap[3])
+
+        if (snakeMap.get(3) != null) {
+            switch (code) {
+                case KeyEvent.VK_O:
+                    if (snakeMap.get(3).getDirection() != DOWN) {
+                        snakeMap.get(3).setNextDirection(UP);
+                    }
+                    break;
+                case KeyEvent.VK_L:
+                    if (snakeMap.get(3).getDirection() != UP) {
+                        snakeMap.get(3).setNextDirection(DOWN);
+                    }
+                    break;
+                case KeyEvent.VK_K:
+                    if (snakeMap.get(3).getDirection() != RIGHT) {
+                        snakeMap.get(3).setNextDirection(LEFT);
+                    }
+                    break;
+                case KeyEvent.VK_COLON:
+                    if (snakeMap.get(3).getDirection() != LEFT) {
+                        snakeMap.get(3).setNextDirection(RIGHT);
+                    }
+                    break;
+            }
+        }
+
         switch (code) {
-            // Controls for Player 1 (snakeMap[0]).
-            case KeyEvent.VK_UP:
-                if (snakeMap.get(0).getDirection()  != DOWN) {
-                    snakeMap.get(0).setNextDirection(UP);
-                }
-                break;
-            case KeyEvent.VK_DOWN:
-                if (snakeMap.get(0).getDirection()  != UP) {
-                    snakeMap.get(0).setNextDirection(DOWN);
-                }
-                break;
-            case KeyEvent.VK_LEFT:
-                if (snakeMap.get(0).getDirection() != RIGHT) {
-                    snakeMap.get(0).setNextDirection(LEFT);
-                }
-                break;
-            case KeyEvent.VK_RIGHT:
-                if (snakeMap.get(0).getDirection() != LEFT) {
-                    snakeMap.get(0).setNextDirection(RIGHT);
-                }
-                break;
-
-            // Controls for Player 2 (snakeMap[1]).
-            case KeyEvent.VK_W:
-                if (snakeMap.get(1).getDirection() != DOWN) {
-                    snakeMap.get(1).setNextDirection(UP);
-                }
-                break;
-            case KeyEvent.VK_S:
-                if (snakeMap.get(1).getDirection() != UP) {
-                    snakeMap.get(1).setNextDirection(DOWN);
-                }
-                break;
-            case KeyEvent.VK_A:
-                if (snakeMap.get(1).getDirection() != RIGHT) {
-                    snakeMap.get(1).setNextDirection(LEFT);
-                }
-                break;
-            case KeyEvent.VK_D:
-                if (snakeMap.get(1).getDirection() != LEFT) {
-                    snakeMap.get(1).setNextDirection(RIGHT);
-                }
-                break;
-
-            // Controls for Player 3 (snakeMap[2])
-            case KeyEvent.VK_Y:
-                if (snakeMap.get(2).getDirection() != DOWN) {
-                    snakeMap.get(2).setNextDirection(UP);
-                }
-                break;
-            case KeyEvent.VK_H:
-                if (snakeMap.get(2).getDirection() != UP) {
-                    snakeMap.get(2).setNextDirection(DOWN);
-                }
-                break;
-            case KeyEvent.VK_G:
-                if (snakeMap.get(2).getDirection() != RIGHT) {
-                    snakeMap.get(2).setNextDirection(LEFT);
-                }
-                break;
-            case KeyEvent.VK_J:
-                if (snakeMap.get(2).getDirection() != LEFT) {
-                    snakeMap.get(2).setNextDirection(RIGHT);
-                }
-                break;
-
-            // Controls for Player 4 (snakeMap[3])
-            case KeyEvent.VK_O:
-                if (snakeMap.get(3).getDirection() != DOWN) {
-                    snakeMap.get(3).setNextDirection(UP);
-                }
-                break;
-            case KeyEvent.VK_L:
-                if (snakeMap.get(3).getDirection() != UP) {
-                    snakeMap.get(3).setNextDirection(DOWN);
-                }
-                break;
-            case KeyEvent.VK_K:
-                if (snakeMap.get(3).getDirection() != RIGHT) {
-                    snakeMap.get(3).setNextDirection(LEFT);
-                }
-                break;
-            case KeyEvent.VK_COLON:
-                if (snakeMap.get(3).getDirection() != LEFT) {
-                    snakeMap.get(3).setNextDirection(RIGHT);
-                }
-                break;
-
             case KeyEvent.VK_F11:
                 dim = Toolkit.getDefaultToolkit().getScreenSize();
                 if ((height != dim.height - 50) || (width != dim.height - 50)) {
