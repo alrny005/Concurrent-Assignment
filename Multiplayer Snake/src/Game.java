@@ -55,7 +55,7 @@ public class Game implements KeyListener, WindowListener {
 
     private int bonusTime = 0;
     private int malusTime = 0;
-
+    private static ConcurrentHashMap<Integer, Client> clientMap;
 
     private ExecutorService gameExecutor;
 
@@ -66,10 +66,16 @@ public class Game implements KeyListener, WindowListener {
         GameServer server = new GameServer();
         snakeMap = new ConcurrentHashMap<>();
         Thread loginThread;
+        clientMap = new ConcurrentHashMap<>();
         for (int i = 0; i < PLAYERS; i++) {
-            loginThread = new Thread(new GameLobby(server, i, snakeMap));
+            loginThread = new Thread(new GameLobby( i,clientMap ));
             loginThread.run();
         }
+        for(int i=0; i<PLAYERS; i++){
+            server.validate(clientMap,snakeMap,i);
+        }
+
+
         start();
     }
 
