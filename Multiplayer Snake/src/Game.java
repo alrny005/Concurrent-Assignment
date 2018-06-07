@@ -27,25 +27,24 @@ public class Game implements KeyListener, WindowListener {
     private final static int PLAYERS = 10;
 
     // KEYS MAP
-    public final static int UP = 0;
-    public final static int DOWN = 1;
-    public final static int LEFT = 2;
-    public final static int RIGHT = 3;
+    private final static int UP = 0;
+    private final static int DOWN = 1;
+    private final static int LEFT = 2;
+    private final static int RIGHT = 3;
 
     // GRID CONTENT
-    public final static int EMPTY = 0;
-    public final static int FOOD_BONUS = 1;
-    public final static int FOOD_MALUS = 2;
-    public final static int BIG_FOOD_BONUS = 3;
-    public final static int SNAKE = 4;
-    GameGrid grid = new GameGrid();
-    static ConcurrentHashMap<Integer, Snake> snakeMap;
+    private final static int EMPTY = 0;
+    private final static int FOOD_BONUS = 1;
+    private final static int FOOD_MALUS = 2;
+    private final static int BIG_FOOD_BONUS = 3;
+    private final static int SNAKE = 4;
+    private GameGrid grid = new GameGrid();
+    private static ConcurrentHashMap<Integer, Snake> snakeMap;
     private int height = 1000;
     private int width = 1000;
     private int gameSize = 100;
-    private long speed = 70;
-    private Frame frame = null;
-    private Canvas canvas = null;
+    private Frame frame;
+    private Canvas canvas;
     private Graphics graph = null;
     private BufferStrategy strategy = null;
     private boolean game_over = false;
@@ -54,8 +53,6 @@ public class Game implements KeyListener, WindowListener {
     private int score = 0;
     private int grow = 0;
 
-    private long cycleTime = 0;
-    private long sleepTime = 0;
     private int bonusTime = 0;
     private int malusTime = 0;
 
@@ -67,7 +64,7 @@ public class Game implements KeyListener, WindowListener {
      */
     public static void main(String[] args) {
         GameServer server = new GameServer();
-        snakeMap = new ConcurrentHashMap<Integer, Snake>();
+        snakeMap = new ConcurrentHashMap<>();
         Thread loginThread;
         for (int i = 0; i < PLAYERS; i++) {
             loginThread = new Thread(new GameLobby(server, i, snakeMap));
@@ -76,13 +73,13 @@ public class Game implements KeyListener, WindowListener {
         start();
     }
 
-    public static void start() {
+    private static void start() {
         Game game = new Game();
         game.init();
         game.mainLoop();
     }
 
-    public Game() {
+    private Game() {
         super();
         frame = new Frame();
         canvas = new Canvas();
@@ -90,7 +87,7 @@ public class Game implements KeyListener, WindowListener {
         grid.setGrid(newGrid);
     }
 
-    public void init() {
+    private void init() {
         frame.setSize(width + 7, height + 27);
         frame.setResizable(false);
         frame.setLocationByPlatform(true);
@@ -115,31 +112,18 @@ public class Game implements KeyListener, WindowListener {
         renderGame();
     }
 
-    public void mainLoop() {
-        while (!game_over) {
-            cycleTime = System.currentTimeMillis();
-            if (!paused) {
-                gameExecutor.submit(new Thread(new GameRun(0, PLAYERS, snakeMap, this)));
-                gameExecutor.submit(new Thread(new GameRun(1, PLAYERS, snakeMap, this)));
-                gameExecutor.submit(new Thread(new GameRun(2, PLAYERS, snakeMap, this)));
-            }
+    private void mainLoop() {
+        while(!game_over){
             renderGame();
-            cycleTime = System.currentTimeMillis() - cycleTime;
-            sleepTime = speed - cycleTime;
-            if (sleepTime < 0)
-                sleepTime = 0;
-            try {
-                Thread.sleep(sleepTime);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(Game.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
+        gameExecutor.shutdownNow();
     }
 
+
     /**
-     * @summary Initialise the value in the snake hashmap based on the number of players.
+     * Initialise the value in the snake hashmap based on the number of players.
      */
-    public void setSnakes() {
+    private void setSnakes() {
         for (int i = 0; i < snakeMap.size(); i++) {
             if (snakeMap.get(i) != null) {
                 snakeMap.get(i).setSnake(new int[gameSize * gameSize][2]);
@@ -166,7 +150,7 @@ public class Game implements KeyListener, WindowListener {
         }
 
         // Initialise every snake onto the grid, making sure no two snakes spawn on the same spot.
-        ArrayList<int[][]> snakeList = new ArrayList<int[][]>();
+        ArrayList<int[][]> snakeList = new ArrayList<>();
         for (int i = 0; i < snakeMap.size(); i++) {
             // Randomize x and y values and determine if they're unique or not.
             boolean safe = false;
@@ -190,6 +174,9 @@ public class Game implements KeyListener, WindowListener {
         }
 
         placeBonus(FOOD_BONUS);
+        gameExecutor.submit(new Thread(new GameRun(0, PLAYERS, snakeMap, this)));
+        gameExecutor.submit(new Thread(new GameRun(1, PLAYERS, snakeMap, this)));
+        gameExecutor.submit(new Thread(new GameRun(2, PLAYERS, snakeMap, this)));
     }
 
     private void renderGame() {
@@ -202,7 +189,7 @@ public class Game implements KeyListener, WindowListener {
                 graph.setColor(Color.WHITE);
                 graph.fillRect(0, 0, width, height);
                 // Draw snake, bonus ...
-                int gridCase = EMPTY;
+                int gridCase;
                 for (int i = 0; i < gameSize; i++) {
                     for (int j = 0; j < gameSize; j++) {
                         gridCase = grid.getStatus(i, j);
@@ -236,7 +223,7 @@ public class Game implements KeyListener, WindowListener {
                 if (game_over) {
                     graph.setColor(Color.RED);
                     graph.drawString("GAME OVER", height / 2 - 30, height / 2);
-                    graph.drawString("YOUR SCORE : " + score, height / 2 - 40, height / 2 + 50);
+                    //graph.drawString("YOUR SCORE : " + score, height / 2 - 40, height / 2 + 50);
                     //graph.drawString("YOUR TIME : " + getTime(), height / 2 - 42, height / 2 + 100);
                 } else if (paused) {
                     graph.setColor(Color.RED);
@@ -254,36 +241,28 @@ public class Game implements KeyListener, WindowListener {
     }
 
     /**
-     * @param movedSnake
-     * @summary Move the snake in the direction that is chosen.
+     * @param movedSnake the snake that is moved
+     * Move the snake in the direction that is chosen.
      */
-    public synchronized void moveSnake(Snake movedSnake, int index) {
+    synchronized void moveSnake(Snake movedSnake, int index) {
         if (movedSnake.getDirection() < 0) {
             return;
         }
-        int ymove = 0;
-        int xmove = 0;
+        int ymove=0;
+        int xmove=0;
 
         switch (movedSnake.getDirection()) {
             case UP:
-                xmove = 0;
                 ymove = -1;
                 break;
             case DOWN:
-                xmove = 0;
                 ymove = 1;
                 break;
             case RIGHT:
                 xmove = 1;
-                ymove = 0;
                 break;
             case LEFT:
                 xmove = -1;
-                ymove = 0;
-                break;
-            default:
-                xmove = 0;
-                ymove = 0;
                 break;
         }
 
@@ -318,7 +297,7 @@ public class Game implements KeyListener, WindowListener {
         movedSnake.setSnake(0, 0, fut_x);
         movedSnake.setSnake(0, 1, fut_y);
         if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
-            if (snakeMap.size() == 0) {
+            if (snakeMap.size() == 1) {
                 game_over = true;
             } else {
 
