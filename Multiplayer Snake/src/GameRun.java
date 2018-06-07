@@ -43,8 +43,7 @@ public class GameRun implements  Runnable {
         }
 
         // Move every snake according to the direction it has chosen.
-        for (
-                int i = offset; i <playerCount; i+=3)
+        for (int i = offset; i <playerCount; i+=3)
         {
             if (snakeMap.get(i) != null) {
                 snakeMap.get(i).setDirection(snakeMap.get(i).getNextDirection());

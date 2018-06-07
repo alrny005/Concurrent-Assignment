@@ -40,7 +40,7 @@ public class Game implements KeyListener, WindowListener {
     public final static int BIG_FOOD_BONUS = 3;
     public final static int SNAKE = 4;
     GameGrid grid = new GameGrid();
-    static ConcurrentHashMap<Integer,Snake> snakeMap;
+    static ConcurrentHashMap<Integer, Snake> snakeMap;
     private int height = 1000;
     private int width = 1000;
     private int gameSize = 100;
@@ -63,20 +63,16 @@ public class Game implements KeyListener, WindowListener {
 
 
     private ExecutorService gameExecutor;
+
     /**
-     * @param args
-     *            the command line arguments
+     * @param args the command line arguments
      */
     public static void main(String[] args) {
         GameServer server = new GameServer();
-        //Thread t1 = new Thread(new GameLobby(server,40));
-        //t1.run();
-        //GameLobby gl = new GameLobby(server,40);
-        snakeMap = new ConcurrentHashMap<Integer,Snake>();
-        //snakeMap = logins.call();
+        snakeMap = new ConcurrentHashMap<Integer, Snake>();
         Thread loginThread;
-        for (int i=0; i<PLAYERS; i++) {
-            loginThread = new Thread(new GameLobby(server,i,snakeMap));
+        for (int i = 0; i < PLAYERS; i++) {
+            loginThread = new Thread(new GameLobby(server, i, snakeMap));
             loginThread.run();
         }
         start();
@@ -128,12 +124,9 @@ public class Game implements KeyListener, WindowListener {
             if (!paused) {
 
                 // Set a new randomly generated direction for NPC snakes.
-                if (PLAYERS > 4) {
-
-                    gameExecutor.submit(new Thread(new GameRun(0,PLAYERS,snakeMap,this)));
-                    gameExecutor.submit(new Thread(new GameRun(1,PLAYERS,snakeMap,this)));
-                    gameExecutor.submit(new Thread(new GameRun(2,PLAYERS,snakeMap,this)));
-                }
+                gameExecutor.submit(new Thread(new GameRun(0, PLAYERS, snakeMap, this)));
+                gameExecutor.submit(new Thread(new GameRun(1, PLAYERS, snakeMap, this)));
+                gameExecutor.submit(new Thread(new GameRun(2, PLAYERS, snakeMap, this)));
             }
             renderGame();
             cycleTime = System.currentTimeMillis() - cycleTime;
@@ -153,7 +146,7 @@ public class Game implements KeyListener, WindowListener {
      */
     public void setSnakes() {
         for (int i = 0; i < snakeMap.size(); i++) {
-            if(snakeMap.get(i) != null) {
+            if (snakeMap.get(i) != null) {
                 snakeMap.get(i).setSnake(new int[gameSize * gameSize][2]);
             }
         }
@@ -170,7 +163,7 @@ public class Game implements KeyListener, WindowListener {
         // Initialise every snake in the hashmap.
         for (int i = 0; i < gameSize * gameSize; i++) {
             for (int index = 0; index < snakeMap.size(); index++) {
-                if(snakeMap.get(i) != null) {
+                if (snakeMap.get(i) != null) {
                     snakeMap.get(index).setSnake(i, 0, -1);
                     snakeMap.get(index).setSnake(i, 1, -1);
                 }
@@ -187,12 +180,14 @@ public class Game implements KeyListener, WindowListener {
             int yValue = 0;
             while (!safe) {
                 // Make sure the result is always divisible by 10, or else the snakes won't render properly on the grid.
-                xValue = rand.nextInt(gameSize/10) * 10;
-                yValue = rand.nextInt(gameSize/10) * 10;
+                xValue = rand.nextInt(gameSize / 10) * 10;
+                yValue = rand.nextInt(gameSize / 10) * 10;
 
-                if (!snakeList.contains(new int[xValue][yValue])) { safe = true; }
+                if (!snakeList.contains(new int[xValue][yValue])) {
+                    safe = true;
+                }
             }
-            if(snakeMap.get(i) != null ) {
+            if (snakeMap.get(i) != null) {
                 snakeMap.get(i).setSnake(0, 0, xValue);
                 snakeMap.get(i).setSnake(0, 1, yValue);
             }
@@ -253,7 +248,7 @@ public class Game implements KeyListener, WindowListener {
                     graph.drawString("PAUSED", height / 2 - 30, height / 2);
                 }
                 graph.setColor(Color.BLACK);
-                graph.drawString("SCORE = " + score, 10, 20);
+                graph.drawString("Living Snakes = " + snakeMap.size(), 10, 20);
                 //graph.drawString("TIME = " + getTime(), 100, 20); // Clock
                 graph.dispose();
             } while (strategy.contentsRestored());
@@ -262,17 +257,18 @@ public class Game implements KeyListener, WindowListener {
             Toolkit.getDefaultToolkit().sync();
         } while (strategy.contentsLost());
     }
+
     /**
-     * @summary Set the direction that the snake is about to travel in.
      * @param directionSnake
+     * @summary Set the direction that the snake is about to travel in.
      */
     private synchronized void setDirectionSnake(Snake directionSnake) {
         directionSnake.setDirection(directionSnake.getNextDirection());
     }
 
     /**
-     * @summary Move the snake in the direction that is chosen.
      * @param movedSnake
+     * @summary Move the snake in the direction that is chosen.
      */
     public synchronized void moveSnake(Snake movedSnake, int index) {
         if (movedSnake.getDirection() < 0) {
@@ -319,29 +315,28 @@ public class Game implements KeyListener, WindowListener {
         if (fut_y >= gameSize)
             fut_y = 0;
 
-        if (grid.getStatus(fut_x,fut_y) == FOOD_BONUS) {
+        if (grid.getStatus(fut_x, fut_y) == FOOD_BONUS) {
             grow++;
             score++;
             placeBonus(FOOD_BONUS);
         }
 
-        if (grid.getStatus(fut_x,fut_y)  == FOOD_MALUS) {
+        if (grid.getStatus(fut_x, fut_y) == FOOD_MALUS) {
             grow += 2;
             score--;
-        } else if (grid.getStatus(fut_x,fut_y)  == BIG_FOOD_BONUS) {
+        } else if (grid.getStatus(fut_x, fut_y) == BIG_FOOD_BONUS) {
             grow += 3;
             score += 3;
         }
         movedSnake.setSnake(0, 0, fut_x);
         movedSnake.setSnake(0, 1, fut_y);
-        if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0,1)) == SNAKE)) {
+        if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
             if (snakeMap.size() == 0) {
                 game_over = true;
-            }
-            else {
+            } else {
 
-                grid.setStatus(movedSnake.getSnake(0,0),movedSnake.getSnake(0,1),EMPTY);
-                    movedSnake.setSnake(0, 0, -10);
+                grid.setStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1), EMPTY);
+                movedSnake.setSnake(0, 0, -10);
                 movedSnake.setSnake(0, 1, -10);
                 snakeMap.remove(index);
 
