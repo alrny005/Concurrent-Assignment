@@ -5,8 +5,13 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 
+import org.mapdb.*;
+
+import java.io.File;
+import java.util.concurrent.ConcurrentNavigableMap;
+
 public class MapDB {
-    public void map(int UsersToCreate) {
+    public ConcurrentNavigableMap<String, String> map() {
 
         DB db = DBMaker.newFileDB(new File("userCredentials"))
                 .closeOnJvmShutdown()
@@ -15,13 +20,13 @@ public class MapDB {
 
         // open existing an collection (or create new)
         ConcurrentNavigableMap<String, String> userCredentials = db.getTreeMap("userCredentials");
-        //userCredentials.put(username password)
 
-        //put 100
-
+        for (int i = 0; i < 100; i++) {
+            userCredentials.put("user" + i, "pass" + i);
+        }
         db.commit();
-
-        db.close();
+        //db.close();
+        return userCredentials;
     }
 
 }

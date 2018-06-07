@@ -1,21 +1,19 @@
 import java.util.concurrent.*;
 
 public class GameServer {
-    ConcurrentHashMap<String, String> userCredentials;
-
+    private  MapDB mapDB;
     /**
      * Constructor which creates a concurrent hashmap object
      */
     public GameServer() {
-        userCredentials = new ConcurrentHashMap<>();
+
+        mapDB = new MapDB();
     }
 
-    /**
-     * adds user information to the userCredentials Hashmap
-     * @param username - name of the user
-     * @param password - password for the user to login
-     */
-    public void logInUser(String username, String password){
-        userCredentials.put(username,password);
+    public void validate(ConcurrentHashMap<Integer, Client> buffer, ConcurrentHashMap<Integer,Snake> snakeMap, int index) {
+        Client temp = buffer.get(index);
+        if(mapDB.map().get(temp.getID()).equals(temp.getPass())){
+            snakeMap.put(index,new Snake());
+        }
     }
 }
