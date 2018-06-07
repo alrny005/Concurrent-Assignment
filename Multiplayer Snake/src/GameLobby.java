@@ -24,14 +24,7 @@ public class GameLobby implements Runnable {
      */
     @Override
     public synchronized void run() {
-        while (count == 1){
-            try {
-                this.wait();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            count+=1;
-        }
+
         server.logInUser("user"+user,"pass"+user);
         snakeMap.put(user,new Snake());
 //        System.out.println(Thread.currentThread().getName()+" is moving "+ user);
