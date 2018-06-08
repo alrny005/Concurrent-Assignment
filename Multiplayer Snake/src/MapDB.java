@@ -11,6 +11,7 @@ import java.io.File;
 import java.util.concurrent.ConcurrentNavigableMap;
 
 /**
+ * MapDB is a database of user credentials
  * @author Timon Groza - Created the database and simulated 100 users to be checked against
  */
 class MapDB {

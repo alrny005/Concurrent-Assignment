@@ -4,6 +4,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * the GameRun class is a runnable that handles snake movement and random directions for non player Snakes
+ *
  * @author Liam Clark - used code that was in the Game class to create a runable to be used in by the executor service
  * in the Game class
  * @author Timon Groza - Created random movement for simulated snakes, checking they don't try to reverse themselves
@@ -27,7 +29,7 @@ public class GameRun implements  Runnable {
     }
 
     public void run() {
-        while (true) {
+        while (!thisGame.game_over) {
             for (int i = 4 + offset; i < playerCount; i += 3) {
                 if (snakeMap.get(i) != null) {
                     //Generate a random number and set the snakes direction,

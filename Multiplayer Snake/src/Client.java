@@ -1,7 +1,8 @@
 /**
+ * the Client class stores client information in an object
  * @author Liam Clark
  */
-public class Client {
+class Client {
     private String clientID;
     private String password;
 
@@ -10,11 +11,11 @@ public class Client {
         password = pass;
     }
 
-    public String getID() {
+    String getID() {
         return clientID;
     }
 
-    public String getPass(){
+    String getPass(){
         return password;
 
     }

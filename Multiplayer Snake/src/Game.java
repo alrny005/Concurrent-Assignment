@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 
 public class Game implements KeyListener, WindowListener {
 
-    private final static int PLAYERS = 100;
+    private final static int PLAYERS = 3;
 
     // KEYS MAP
     private final static int UP = 0;
@@ -48,7 +48,7 @@ public class Game implements KeyListener, WindowListener {
     private Canvas canvas;
     private Graphics graph = null;
     private BufferStrategy strategy = null;
-    private boolean game_over = false;
+    public boolean game_over = false;
     private boolean paused = false;
 
     private int score = 0;
@@ -326,29 +326,27 @@ public class Game implements KeyListener, WindowListener {
             grow += 3;
             score += 3;
         }
-        
+
         // If the snake's move is valid, set it as its current location.
         movedSnake.setSnake(0, 0, fut_x);
         movedSnake.setSnake(0, 1, fut_y);
 
         // Delete snake if it collides into another snake.
         if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
+            //the snake is removed from the map, the map cell is set to empty and the snake is removed from
+            // the concurrent hashmap
+            grid.setStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1), EMPTY);
+            movedSnake.setSnake(0, 0, -10);
+            movedSnake.setSnake(0, 1, -10);
+            snakeMap.remove(index);
             if (snakeMap.size() == 1) {
                 game_over = true;
-            }
-            else {
-                //the snake is removed from the map, the map cell is set to empty and the snake is removed from
-                // the concurrent hashmap
-                grid.setStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1), EMPTY);
-                movedSnake.setSnake(0, 0, -10);
-                movedSnake.setSnake(0, 1, -10);
-                snakeMap.remove(index);
             }
         }
 
         // Make the previous location of the snake 'empty' on the grid.
         grid.setStatus(tempx, tempy, EMPTY);
-        
+
         // Update the grid.
         int snakex, snakey, i;
         for (i = 1; i < gameSize * gameSize; i++) {
@@ -384,7 +382,7 @@ public class Game implements KeyListener, WindowListener {
                 }
             }
         }
-        
+
         // Places malicious fruit if enough normal fruit have been eaten.
         malusTime--;
         if (malusTime == 0) {
@@ -395,7 +393,7 @@ public class Game implements KeyListener, WindowListener {
                 }
             }
         }
-        
+
         // Increase the size of the snake if it has eaten a fruit.
         if (grow > 0) {
             movedSnake.setSnake(i, 0, tempx);

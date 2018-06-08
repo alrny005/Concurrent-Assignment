@@ -11,12 +11,12 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  */
 
-public class GameGrid {
+class GameGrid {
     private ConcurrentHashMap<Integer,Integer> grid;    // An object that represents the grid that the game will run on.
     private int width;                                  // The width of the grid, which can be set to a desired size.
 
     // Syncrhonized as we definitely want only one instance setting the grid at any given time.
-    public synchronized void setGrid(ConcurrentHashMap<Integer,Integer> grid, int gridWidth) {
+    synchronized void setGrid(ConcurrentHashMap<Integer,Integer> grid, int gridWidth) {
         this.grid = grid;
         width = gridWidth;
     }
@@ -31,9 +31,9 @@ public class GameGrid {
      *      SNAKE = 4;
      * @param i The horizontal value of the location being retrieved.
      * @param j The vertical value of the location being retrieved.
-     * @return grid[i][j]
+     * @return the value of the hashmap with the key that matches the location (i,j) of the game state
      */
-    public int getStatus(int i, int j) {
+    int getStatus(int i, int j) {
         return grid.get((j*width)+i);
     }
 
@@ -43,7 +43,7 @@ public class GameGrid {
      * @param j The vertical value of the location being retrieved.
      * @param status The value stored at the x, y location.
      */
-    public void setStatus(int i, int j, int status) {
+    void setStatus(int i, int j, int status) {
         grid.put(((j*width)+i),status);
     }
 }

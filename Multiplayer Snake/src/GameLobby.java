@@ -1,5 +1,8 @@
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * the GameLobby class is a runnable that adds clients to the buffer
+ */
 public class GameLobby implements Runnable {
     private int user;
     private ConcurrentHashMap<Integer,Client> lobby;
