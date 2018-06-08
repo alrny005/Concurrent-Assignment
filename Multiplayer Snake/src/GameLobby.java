@@ -21,7 +21,7 @@ public class GameLobby implements Runnable {
     /**
     * @author Damber (adhdy001)
     */
-    private synchronized void append(){
+    private synchronized void add(){
         while (count == 1){
             try {
                 this.wait();
@@ -39,7 +39,7 @@ public class GameLobby implements Runnable {
      */
     @Override
     public void run() {
-        append();
+        add();
     }
 
 }
