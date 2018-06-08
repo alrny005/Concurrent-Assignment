@@ -18,4 +18,16 @@ public class OurTests {
         testServer.validate(clientMap,snakeMap,0);
         Assert.assertTrue(snakeMap.size() == 0);
     }
+
+    /**
+     * this test checks that a new client is created with a set ID.
+     */
+    @Test
+    public void timonsTest(){
+        String pw = "testPass";
+        String  ID = "testID";
+        Client testClient = new Client(ID, pw);
+        Assert.assertTrue(ID.equals(testClient.getID()));
+    }
+
 }
