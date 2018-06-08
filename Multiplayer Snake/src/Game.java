@@ -38,10 +38,10 @@ public class Game implements KeyListener, WindowListener {
     private final static int FOOD_MALUS = 2;
     private final static int BIG_FOOD_BONUS = 3;
     private final static int SNAKE = 4;
-    private GameGrid grid = new GameGrid();
     private static ConcurrentHashMap<Integer, Snake> snakeMap;
     private int height = 1000;
     private int width = 1000;
+    private GameGrid grid = new GameGrid();
     private int gameSize = 100;
     private Frame frame;
     private Canvas canvas;
@@ -60,6 +60,7 @@ public class Game implements KeyListener, WindowListener {
     private ExecutorService gameExecutor;
 
     /**
+     * @author Liam Clark
      * @param args the command line arguments
      */
     public static void main(String[] args) {
@@ -74,8 +75,6 @@ public class Game implements KeyListener, WindowListener {
         for(int i=0; i<PLAYERS; i++){
             server.validate(clientMap,snakeMap,i);
         }
-
-
         start();
     }
 
@@ -85,16 +84,18 @@ public class Game implements KeyListener, WindowListener {
         game.mainLoop();
     }
 
+    /**
+     * @author Liam Clark - wrote the code that creates a concurrent HashMap and sets the grid variable to newGrid
+     */
     private Game() {
         super();
         frame = new Frame();
         canvas = new Canvas();
-//        int[][] newGrid = new int[gameSize][gameSize];
         ConcurrentHashMap<Integer,Integer> newGrid = new ConcurrentHashMap<>();
         for (int i=0; i<gameSize*gameSize; i++){
             newGrid.put(i,0);
         }
-        grid.setGrid(newGrid);
+        grid.setGrid(newGrid,width);
     }
 
     private void init() {
@@ -122,16 +123,20 @@ public class Game implements KeyListener, WindowListener {
         renderGame();
     }
 
+    /**
+     * @author Liam Clark used code in the mainLoop to create the GameRun Runnable class
+     */
     private void mainLoop() {
         while(!game_over){
             renderGame();
         }
-        gameExecutor.shutdownNow();
+        gameExecutor.shutdown();
     }
 
 
     /**
      * Initialise the value in the snake hashmap based on the number of players.
+     * @author Liam Clark - created the Executor Service and added the runnable's to the threadpool
      */
     private void setSnakes() {
         for (int i = 0; i < snakeMap.size(); i++) {
@@ -148,7 +153,6 @@ public class Game implements KeyListener, WindowListener {
                 grid.setStatus(i, j, EMPTY);
             }
         }
-        gameExecutor = Executors.newFixedThreadPool(3);
         // Initialise every snake in the hashmap.
         for (int i = 0; i < gameSize * gameSize; i++) {
             for (int index = 0; index < snakeMap.size(); index++) {
@@ -184,9 +188,11 @@ public class Game implements KeyListener, WindowListener {
         }
 
         placeBonus(FOOD_BONUS);
-        gameExecutor.submit(new Thread(new GameRun(0, PLAYERS, snakeMap, this)));
-        gameExecutor.submit(new Thread(new GameRun(1, PLAYERS, snakeMap, this)));
-        gameExecutor.submit(new Thread(new GameRun(2, PLAYERS, snakeMap, this)));
+
+        gameExecutor = Executors.newFixedThreadPool(3);
+        gameExecutor.submit(new GameRun(0, PLAYERS, snakeMap, this));
+        gameExecutor.submit(new GameRun(1, PLAYERS, snakeMap, this));
+        gameExecutor.submit(new GameRun(2, PLAYERS, snakeMap, this));
     }
 
     private void renderGame() {
@@ -253,138 +259,133 @@ public class Game implements KeyListener, WindowListener {
     /**
      * @param movedSnake the snake that is moved
      * Move the snake in the direction that is chosen.
+     * @author Liam Clark -  fixed the snake deletion
      */
-    synchronized void moveSnake(Snake movedSnake, int index) {
-        if (movedSnake.getDirection() < 0) {
-            return;
-        }
-        int ymove=0;
-        int xmove=0;
-
-        switch (movedSnake.getDirection()) {
-            case UP:
-                ymove = -1;
-                break;
-            case DOWN:
-                ymove = 1;
-                break;
-            case RIGHT:
-                xmove = 1;
-                break;
-            case LEFT:
-                xmove = -1;
-                break;
-        }
-
-        int tempx = movedSnake.getSnake(0, 0);
-        int tempy = movedSnake.getSnake(0, 1);
-
-        int fut_x = movedSnake.getSnake(0, 0) + xmove;
-        int fut_y = movedSnake.getSnake(0, 1) + ymove;
-
-        if (fut_x < 0)
-            fut_x = gameSize - 1;
-        if (fut_y < 0)
-            fut_y = gameSize - 1;
-        if (fut_x >= gameSize)
-            fut_x = 0;
-        if (fut_y >= gameSize)
-            fut_y = 0;
-
-        //TODO move
-        if (grid.getStatus(fut_x, fut_y) == FOOD_BONUS) {
-            grow++;
-            score++;
-            placeBonus(FOOD_BONUS);
-        }
-
-        if (grid.getStatus(fut_x, fut_y) == FOOD_MALUS) {
-            grow += 2;
-            score--;
-        } else if (grid.getStatus(fut_x, fut_y) == BIG_FOOD_BONUS) {
-            grow += 3;
-            score += 3;
-        }
-        // until here
-        movedSnake.setSnake(0, 0, fut_x);
-        movedSnake.setSnake(0, 1, fut_y);
-        
-        //TODO move
-        if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
-            if (snakeMap.size() == 1) {
-                game_over = true;
-            } else {
-
-                grid.setStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1), EMPTY);
-                movedSnake.setSnake(0, 0, -10);
-                movedSnake.setSnake(0, 1, -10);
-                snakeMap.remove(index);
-
+    void moveSnake(Snake movedSnake, int index) {
+            if (movedSnake.getDirection() < 0) {
+                return;
             }
-        }
+            int ymove = 0;
+            int xmove = 0;
 
-        grid.setStatus(tempx, tempy, EMPTY);
-        //until here
-        int snakex, snakey, i;
-        for (i = 1; i < gameSize * gameSize; i++) {
-            if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
-                break;
+            switch (movedSnake.getDirection()) {
+                case UP:
+                    ymove = -1;
+                    break;
+                case DOWN:
+                    ymove = 1;
+                    break;
+                case RIGHT:
+                    xmove = 1;
+                    break;
+                case LEFT:
+                    xmove = -1;
+                    break;
             }
-            //TODO move line with ^^^ if and for
-            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), EMPTY);
-            
-            snakex = movedSnake.getSnake(i, 0);
-            snakey = movedSnake.getSnake(i, 1);
-            movedSnake.setSnake(i, 0, tempx);
-            movedSnake.setSnake(i, 1, tempy);
-            tempx = snakex;
-            tempy = snakey;
-        }
-        
-        //TODO move
-        for (i = 0; i < gameSize * gameSize; i++) {
-            if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
-                break;
 
+            int tempx = movedSnake.getSnake(0, 0);
+            int tempy = movedSnake.getSnake(0, 1);
+
+            int fut_x = movedSnake.getSnake(0, 0) + xmove;
+            int fut_y = movedSnake.getSnake(0, 1) + ymove;
+
+            if (fut_x < 0)
+                fut_x = gameSize - 1;
+            if (fut_y < 0)
+                fut_y = gameSize - 1;
+            if (fut_x >= gameSize)
+                fut_x = 0;
+            if (fut_y >= gameSize)
+                fut_y = 0;
+
+            if (grid.getStatus(fut_x, fut_y) == FOOD_BONUS) {
+                grow++;
+                score++;
+                placeBonus(FOOD_BONUS);
             }
-            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
-            
-        }
 
-        bonusTime--;
-        if (bonusTime == 0) {
-            for (i = 0; i < gameSize; i++) {
-                for (int j = 0; j < gameSize; j++) {
-                    if (grid.getStatus(i, j) == BIG_FOOD_BONUS)
-                        grid.setStatus(i, j, EMPTY);
+            if (grid.getStatus(fut_x, fut_y) == FOOD_MALUS) {
+                grow += 2;
+                score--;
+            } else if (grid.getStatus(fut_x, fut_y) == BIG_FOOD_BONUS) {
+                grow += 3;
+                score += 3;
+            }
+            movedSnake.setSnake(0, 0, fut_x);
+            movedSnake.setSnake(0, 1, fut_y);
+
+            if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
+                if (snakeMap.size() == 1) {
+                    game_over = true;
+                }
+                else {
+                    //the snake is removed from the map, the map cell is set to empty and the snake is removed from
+                    // the concurrent hashmap
+                    grid.setStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1), EMPTY);
+                    movedSnake.setSnake(0, 0, -10);
+                    movedSnake.setSnake(0, 1, -10);
+                    snakeMap.remove(index);
                 }
             }
-        }
-        malusTime--;
-        if (malusTime == 0) {
-            for (i = 0; i < gameSize; i++) {
-                for (int j = 0; j < gameSize; j++) {
-                    if (grid.getStatus(i, j) == FOOD_MALUS)
-                        grid.setStatus(i, j, EMPTY);
+
+            grid.setStatus(tempx, tempy, EMPTY);
+            int snakex, snakey, i;
+            for (i = 1; i < gameSize * gameSize; i++) {
+                if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
+                    break;
+                }
+                grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), EMPTY);
+
+                snakex = movedSnake.getSnake(i, 0);
+                snakey = movedSnake.getSnake(i, 1);
+                movedSnake.setSnake(i, 0, tempx);
+                movedSnake.setSnake(i, 1, tempy);
+                tempx = snakex;
+                tempy = snakey;
+            }
+
+            for (i = 0; i < gameSize * gameSize; i++) {
+                if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
+                    break;
+
+                }
+                grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
+
+            }
+
+            bonusTime--;
+            if (bonusTime == 0) {
+                for (i = 0; i < gameSize; i++) {
+                    for (int j = 0; j < gameSize; j++) {
+                        if (grid.getStatus(i, j) == BIG_FOOD_BONUS)
+                            grid.setStatus(i, j, EMPTY);
+                    }
                 }
             }
-        }
-        if (grow > 0) {
-            movedSnake.setSnake(i, 0, tempx);
-            movedSnake.setSnake(i, 1, tempy);
-            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
+            malusTime--;
+            if (malusTime == 0) {
+                for (i = 0; i < gameSize; i++) {
+                    for (int j = 0; j < gameSize; j++) {
+                        if (grid.getStatus(i, j) == FOOD_MALUS)
+                            grid.setStatus(i, j, EMPTY);
+                    }
+                }
+            }
+            if (grow > 0) {
+                movedSnake.setSnake(i, 0, tempx);
+                movedSnake.setSnake(i, 1, tempy);
+                grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
 
-            if (score % 10 == 0) {
-                placeBonus(BIG_FOOD_BONUS);
-                bonusTime = 100;
+                if (score % 10 == 0) {
+                    placeBonus(BIG_FOOD_BONUS);
+                    bonusTime = 100;
+                }
+                if (score % 5 == 0) {
+                    placeMalus(FOOD_MALUS);
+                    malusTime = 100;
+                }
+                grow--;
             }
-            if (score % 5 == 0) {
-                placeMalus(FOOD_MALUS);
-                malusTime = 100;
-            }
-            grow--;
-        }
-        //until here
     }
 
     private void placeBonus(int bonus_type) {
@@ -537,9 +538,7 @@ public class Game implements KeyListener, WindowListener {
             case KeyEvent.VK_SPACE:
                 if (!game_over)
                     paused = !paused;
-                break;
-            default:
-                // Unsupported key
+                    gameExecutor.shutdown();
                 break;
         }
     }

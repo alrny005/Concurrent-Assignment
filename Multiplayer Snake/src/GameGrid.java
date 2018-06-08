@@ -6,17 +6,19 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  *@author Norris Alrichani, Liam Clark
  *
+ * Liam Clark - converted the integer array grid into a concurrent hashmap that uses the width variable to simulate
+ * a 2 Dimensional map
+ *
  */
 
 public class GameGrid {
+    private int width;
     private ConcurrentHashMap<Integer,Integer> grid;
 
-    /**
-     * Make this grid int array equal to the argument int array.
-     * @param grid
-     */
-    public synchronized void setGrid(ConcurrentHashMap<Integer,Integer> grid) {
+
+    public synchronized void setGrid(ConcurrentHashMap<Integer,Integer> grid, int gridWidth) {
         this.grid = grid;
+        width = gridWidth;
     }
 
     /**
@@ -32,7 +34,7 @@ public class GameGrid {
      * @return grid[i][j]
      */
     public int getStatus(int i, int j) {
-        return grid.get((j*1000)+i);
+        return grid.get((j*width)+i);
     }
 
     /**
@@ -42,7 +44,6 @@ public class GameGrid {
      * @param status
      */
     public void setStatus(int i, int j, int status) {
-        grid.put(((j*1000)+i),status);
-//        grid[i][j] = status;
+        grid.put(((j*width)+i),status);
     }
 }

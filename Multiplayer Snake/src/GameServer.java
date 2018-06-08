@@ -13,7 +13,6 @@ public class GameServer {
     public void validate(ConcurrentHashMap<Integer, Client> buffer, ConcurrentHashMap<Integer,Snake> snakeMap, int index) {
         Client temp = buffer.get(index);
         if(mapDB.map().get(temp.getID()).equals(temp.getPass())){
-            System.out.println("test");
             snakeMap.put(index,new Snake());
         }
     }
