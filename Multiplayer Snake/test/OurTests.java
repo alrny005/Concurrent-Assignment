@@ -49,4 +49,18 @@ public class OurTests {
         snakeMap.remove(1);
         Assert.assertTrue(snakeMap.get(1) == null);
     }
+    
+    @Test
+    public void DamberTest() throws Exception{
+
+        DB db = DBMaker.newFileDB(new File("userCredentials"))
+                .closeOnJvmShutdown()
+                .encryptionEnable("password")
+                .make();
+        ConcurrentNavigableMap<String, String> userCredentials = db.getTreeMap("userCredentials");
+
+        for (int i = 0; i < 4; i++) {
+            userCredentials.put("user" + i, "pass" + i);
+        }
+        Assert.assertTrue("Check how many userCredentials added", userCredentials.size() == 4);
 }
