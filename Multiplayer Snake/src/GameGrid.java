@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 
 class GameGrid {
-    private ConcurrentHashMap<Integer,Integer> grid;    // An object that represents the grid that the game will run on.
+        private ConcurrentHashMap<Integer,Integer> grid;    // An object that represents the grid that the game will run on.
     private int width;                                  // The width of the grid, which can be set to a desired size.
 
     // Syncrhonized as we definitely want only one instance setting the grid at any given time.

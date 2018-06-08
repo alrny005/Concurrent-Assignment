@@ -61,18 +61,19 @@ public class OurTests {
                 .encryptionEnable("password")
                 .make();
         ConcurrentNavigableMap<String, String> userCredentials = db.getTreeMap("userCredentials");
-
+        ConcurrentHashMap<Integer, Client> clientMap = new ConcurrentHashMap<>();
         for (int i = 0; i < 4; i++) {
-            userCredentials.put("user" + i, "pass" + i);
+            clientMap.put(i, new Client("user" + i, "pass" + i));
         }
-        Assert.assertTrue("Check how many userCredentials added", userCredentials.size() == 4);
+        Assert.assertTrue("Check how many userCredentials added", clientMap.size() == 4);
 }
     
     
-     private static ConcurrentHashMap<Integer, Snake> snakes;
+
     
     @Test
     public void SidTest() throws Exception{
+        ConcurrentHashMap<Integer, Snake> snakes = new ConcurrentHashMap<>();
         int i  =0;
         for (i = 0; i < 4; i++){
             snakes.put(i,new Snake());
