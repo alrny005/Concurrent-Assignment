@@ -30,4 +30,23 @@ public class OurTests {
         Assert.assertTrue(ID.equals(testClient.getID()));
     }
 
+    /**
+     * This test will check if a snake is correctly deleted when it collides with another snake.
+     * The point of this test is to show that ConcurrentHashMap will correctly remove snakes when the game is running.
+     */
+    @Test
+    public void norrisTest() {
+        ConcurrentHashMap<Integer, Snake> snakeMap = new ConcurrentHashMap<>();
+
+        // Create two snakes and put them into the hashmap.
+        Snake snake1 = new Snake();
+        Snake snake2 = new Snake();
+
+        snakeMap.put(0, snake1);
+        snakeMap.put(1, snake2);
+
+        // Remove the snake from the hashmap and assert.
+        snakeMap.remove(1);
+        Assert.assertTrue(snakeMap.get(1) == null);
+    }
 }
