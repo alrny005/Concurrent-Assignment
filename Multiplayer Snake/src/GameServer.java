@@ -11,7 +11,7 @@ class GameServer {
         mapDB = new MapDB();
     }
 
-    void validate(ConcurrentHashMap<Integer, Client> buffer, ConcurrentHashMap<Integer,Snake> snakeMap, int index) {
+    public void validate(ConcurrentHashMap<Integer, Client> buffer, ConcurrentHashMap<Integer,Snake> snakeMap, int index) {
         Client temp = buffer.get(index);
         //check that password is correct for the user, then add them into the snakeMap
         if(mapDB.map().get(temp.getID()).equals(temp.getPass())){
