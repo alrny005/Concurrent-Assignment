@@ -13,12 +13,9 @@ public class GameLobby implements Runnable {
         lobby = clientLobby;
     }
 
+
     int count = 0;
-    /**
-     * when the thread is run, a user is logged in and a snake is being added to the concurrent hashmap
-     */
-    @Override
-    public synchronized void run() {
+    public synchronized void Add(ConcurrentHashMap<Integer,Client> temp){
         while (count == 1){
             try {
                 this.wait();
@@ -26,15 +23,18 @@ public class GameLobby implements Runnable {
                 e.printStackTrace();
             }
         }
-        lobby.put(user,new Client("user"+user, "pass"+user));
+        lobby = temp;
         count += 1;
         this.notifyAll();
 
     }
 
-
-
-
-
+    /**
+     * when the thread is run, a user is logged in and a snake is being added to the concurrent hashmap
+     */
+    @Override
+    public void run() {
+        lobby.put(user,new Client("user"+user, "pass"+user));
+    }
 
 }
