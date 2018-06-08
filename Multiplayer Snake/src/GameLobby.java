@@ -15,6 +15,9 @@ public class GameLobby implements Runnable {
         lobby = clientLobby;
     }
 
+    /**
+    * @author Damber (adhdy001)
+    */
     private synchronized void Add(){
         while (count == 1){
             try {
