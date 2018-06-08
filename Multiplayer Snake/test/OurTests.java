@@ -64,3 +64,20 @@ public class OurTests {
         }
         Assert.assertTrue("Check how many userCredentials added", userCredentials.size() == 4);
 }
+    
+    
+     private static ConcurrentHashMap<Integer, Snake> snakes;
+    
+    @Test
+    public void SidTest() throws Exception{
+        int i  =0;
+        for (i = 0; i < 4; i++){
+            snakes.put(i,new Snake());
+        }
+        int expected_snakes = 4;
+        Assert.assertEquals(expected_snakes, snakes.size());   
+}
+    
+}
+    
+    
