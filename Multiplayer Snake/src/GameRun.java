@@ -3,6 +3,11 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * @author Liam Clark - used code that was in the Game class to create a runable to be used in by the executor service
+ * in the Game class
+ * @author Timon Groza - Created random movement for simulated snakes, checking they don't try to reverse themselves
+ */
 public class GameRun implements  Runnable {
     private int playerCount;
     private int offset;
@@ -25,6 +30,8 @@ public class GameRun implements  Runnable {
         while (true) {
             for (int i = 4 + offset; i < playerCount; i += 3) {
                 if (snakeMap.get(i) != null) {
+                    //Generate a random number and set the snakes direction,
+                    //checking that the snake cannot reverse on itself.
                     int nextDirection = rand.nextInt(4);
                     int directionChecker = snakeMap.get(i).getDirection();
                     if (directionChecker == 0 && nextDirection == 1) {
