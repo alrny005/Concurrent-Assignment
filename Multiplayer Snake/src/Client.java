@@ -1,8 +1,9 @@
+/**
+ * @author Liam Clark
+ */
 public class Client {
     private String clientID;
     private String password;
-
-
 
     Client(String ID, String pass) {
         clientID = ID;
