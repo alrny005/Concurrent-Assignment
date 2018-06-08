@@ -2,20 +2,20 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class GameLobby implements Runnable {
     private int user;
-    ConcurrentHashMap<Integer,Client> lobby;
+    private ConcurrentHashMap<Integer,Client> lobby;
+    private int count = 0;
+
     /**
      * Constructor for the GameLobby Runnable, allows the thread to get a reference for the server and snake hashmap
      * as well as the index of the player
      * @param userIndex - finds the index for the user to be added, used as an ID in the concurrent hashmap
      */
-    public GameLobby(int userIndex, ConcurrentHashMap<Integer,Client> clientLobby){
+    GameLobby(int userIndex, ConcurrentHashMap<Integer,Client> clientLobby){
         user = userIndex;
         lobby = clientLobby;
     }
 
-
-    int count = 0;
-    public synchronized void Add(){
+    private synchronized void Add(){
         while (count == 1){
             try {
                 this.wait();
@@ -26,7 +26,6 @@ public class GameLobby implements Runnable {
         lobby.put(user,new Client("user"+user, "pass"+user));
         count += 1;
         this.notifyAll();
-
     }
 
     /**
