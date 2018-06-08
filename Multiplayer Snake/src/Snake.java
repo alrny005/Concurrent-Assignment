@@ -1,8 +1,6 @@
-import java.util.Random;
-
 /**
  * Class that represents one instance of a snake. Functions related to a snake from the Game class have been
- * imported into this class so that multiple snakes can exist at the same time.
+ *  imported into this class so that multiple snakes can exist at the same time.
  *
  * @author Norris Alrichani (alrny005)
  */
@@ -12,7 +10,7 @@ public class Snake {
     private int direction = -1;         // Represents the direction the snake is travelling; 0 = UP, 1 = DOWN, 2 = LEFT, 3 = RIGHT.
     private int next_direction = -1;    // Represents the next direction the snake is travelling.
 
-    // Get a certain position rather than the whole snake.
+    // Get the value (status) at a certain position rather than the whole snake.
     public synchronized int getSnake(int i, int j) {
         return snake[i][j];
     }

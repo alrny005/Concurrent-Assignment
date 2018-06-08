@@ -12,11 +12,11 @@ import java.awt.event.WindowListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author Peuch
@@ -39,6 +39,7 @@ public class Game implements KeyListener, WindowListener {
     private final static int BIG_FOOD_BONUS = 3;
     private final static int SNAKE = 4;
     private static ConcurrentHashMap<Integer, Snake> snakeMap;
+    private static ConcurrentHashMap<Integer, Client> clientMap;
     private int height = 1000;
     private int width = 1000;
     private GameGrid grid = new GameGrid();
@@ -55,7 +56,6 @@ public class Game implements KeyListener, WindowListener {
 
     private int bonusTime = 0;
     private int malusTime = 0;
-    private static ConcurrentHashMap<Integer, Client> clientMap;
 
     private ExecutorService gameExecutor;
 
@@ -95,7 +95,7 @@ public class Game implements KeyListener, WindowListener {
         for (int i=0; i<gameSize*gameSize; i++){
             newGrid.put(i,0);
         }
-        grid.setGrid(newGrid,width);
+        grid.setGrid(newGrid, width);
     }
 
     private void init() {
@@ -146,6 +146,10 @@ public class Game implements KeyListener, WindowListener {
         }
     }
 
+    /**
+     * Initalise the game grid and snake hashmap.
+     * @author Norris Alrichani - Refactored the original code to allow for initialising multiple Snakes.
+     */
     private void initGame() {
         // Initialise tabs
         for (int i = 0; i < gameSize; i++) {
@@ -164,7 +168,7 @@ public class Game implements KeyListener, WindowListener {
         }
 
         // Initialise every snake onto the grid, making sure no two snakes spawn on the same spot.
-        ArrayList<int[][]> snakeList = new ArrayList<>();
+        ArrayList<int[][]> snakeList = new ArrayList<>(); // Store used grid locations to compare to randomly genned location.
         for (int i = 0; i < snakeMap.size(); i++) {
             // Randomize x and y values and determine if they're unique or not.
             boolean safe = false;
@@ -180,6 +184,8 @@ public class Game implements KeyListener, WindowListener {
                     safe = true;
                 }
             }
+            
+            // Set the safe location on the snake map and apply the Snake status to the respective location on the grid.
             if (snakeMap.get(i) != null) {
                 snakeMap.get(i).setSnake(0, 0, xValue);
                 snakeMap.get(i).setSnake(0, 1, yValue);
@@ -189,12 +195,17 @@ public class Game implements KeyListener, WindowListener {
 
         placeBonus(FOOD_BONUS);
 
+        // Execute all three threads that contain snakes (fourth thread is reserved for the main program); uses thread
+        //  number and number of players to set the offset.
         gameExecutor = Executors.newFixedThreadPool(3);
         gameExecutor.submit(new GameRun(0, PLAYERS, snakeMap, this));
         gameExecutor.submit(new GameRun(1, PLAYERS, snakeMap, this));
         gameExecutor.submit(new GameRun(2, PLAYERS, snakeMap, this));
     }
 
+    /**
+     * Render the game and update it after a set cycle of time.
+     */
     private void renderGame() {
         int gridUnit = height / gameSize;
         canvas.paint(graph);
@@ -257,137 +268,157 @@ public class Game implements KeyListener, WindowListener {
     }
 
     /**
-     * @param movedSnake the snake that is moved
      * Move the snake in the direction that is chosen.
-     * @author Liam Clark -  fixed the snake deletion
+     * @param movedSnake the snake that is moved
+     * @param index the index of the said snake
+     *              
+     * @author Liam Clark, Norris Alrichani.
+     * Liam -  fixed the snake deletion.
+     * Norris - Refactored original code to work with multiple snakes.
      */
     void moveSnake(Snake movedSnake, int index) {
-            if (movedSnake.getDirection() < 0) {
-                return;
+        if (movedSnake.getDirection() < 0) {
+            return;
+        }
+        int ymove = 0;
+        int xmove = 0;
+
+        switch (movedSnake.getDirection()) {
+            case UP:
+                ymove = -1;
+                break;
+            case DOWN:
+                ymove = 1;
+                break;
+            case RIGHT:
+                xmove = 1;
+                break;
+            case LEFT:
+                xmove = -1;
+                break;
+        }
+
+        int tempx = movedSnake.getSnake(0, 0);
+        int tempy = movedSnake.getSnake(0, 1);
+
+        int fut_x = movedSnake.getSnake(0, 0) + xmove;
+        int fut_y = movedSnake.getSnake(0, 1) + ymove;
+
+        if (fut_x < 0)
+            fut_x = gameSize - 1;
+        if (fut_y < 0)
+            fut_y = gameSize - 1;
+        if (fut_x >= gameSize)
+            fut_x = 0;
+        if (fut_y >= gameSize)
+            fut_y = 0;
+
+        if (grid.getStatus(fut_x, fut_y) == FOOD_BONUS) {
+            grow++;
+            score++;
+            placeBonus(FOOD_BONUS);
+        }
+
+        if (grid.getStatus(fut_x, fut_y) == FOOD_MALUS) {
+            grow += 2;
+            score--;
+        } else if (grid.getStatus(fut_x, fut_y) == BIG_FOOD_BONUS) {
+            grow += 3;
+            score += 3;
+        }
+        
+        // If the snake's move is valid, set it as its current location.
+        movedSnake.setSnake(0, 0, fut_x);
+        movedSnake.setSnake(0, 1, fut_y);
+
+        // Delete snake if it collides into another snake.
+        if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
+            if (snakeMap.size() == 1) {
+                game_over = true;
             }
-            int ymove = 0;
-            int xmove = 0;
-
-            switch (movedSnake.getDirection()) {
-                case UP:
-                    ymove = -1;
-                    break;
-                case DOWN:
-                    ymove = 1;
-                    break;
-                case RIGHT:
-                    xmove = 1;
-                    break;
-                case LEFT:
-                    xmove = -1;
-                    break;
+            else {
+                //the snake is removed from the map, the map cell is set to empty and the snake is removed from
+                // the concurrent hashmap
+                grid.setStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1), EMPTY);
+                movedSnake.setSnake(0, 0, -10);
+                movedSnake.setSnake(0, 1, -10);
+                snakeMap.remove(index);
             }
+        }
 
-            int tempx = movedSnake.getSnake(0, 0);
-            int tempy = movedSnake.getSnake(0, 1);
-
-            int fut_x = movedSnake.getSnake(0, 0) + xmove;
-            int fut_y = movedSnake.getSnake(0, 1) + ymove;
-
-            if (fut_x < 0)
-                fut_x = gameSize - 1;
-            if (fut_y < 0)
-                fut_y = gameSize - 1;
-            if (fut_x >= gameSize)
-                fut_x = 0;
-            if (fut_y >= gameSize)
-                fut_y = 0;
-
-            if (grid.getStatus(fut_x, fut_y) == FOOD_BONUS) {
-                grow++;
-                score++;
-                placeBonus(FOOD_BONUS);
+        // Make the previous location of the snake 'empty' on the grid.
+        grid.setStatus(tempx, tempy, EMPTY);
+        
+        // Update the grid.
+        int snakex, snakey, i;
+        for (i = 1; i < gameSize * gameSize; i++) {
+            if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
+                break;
             }
+            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), EMPTY);
 
-            if (grid.getStatus(fut_x, fut_y) == FOOD_MALUS) {
-                grow += 2;
-                score--;
-            } else if (grid.getStatus(fut_x, fut_y) == BIG_FOOD_BONUS) {
-                grow += 3;
-                score += 3;
-            }
-            movedSnake.setSnake(0, 0, fut_x);
-            movedSnake.setSnake(0, 1, fut_y);
+            snakex = movedSnake.getSnake(i, 0);
+            snakey = movedSnake.getSnake(i, 1);
+            movedSnake.setSnake(i, 0, tempx);
+            movedSnake.setSnake(i, 1, tempy);
+            tempx = snakex;
+            tempy = snakey;
+        }
 
-            if ((grid.getStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1)) == SNAKE)) {
-                if (snakeMap.size() == 1) {
-                    game_over = true;
-                }
-                else {
-                    //the snake is removed from the map, the map cell is set to empty and the snake is removed from
-                    // the concurrent hashmap
-                    grid.setStatus(movedSnake.getSnake(0, 0), movedSnake.getSnake(0, 1), EMPTY);
-                    movedSnake.setSnake(0, 0, -10);
-                    movedSnake.setSnake(0, 1, -10);
-                    snakeMap.remove(index);
-                }
-            }
-
-            grid.setStatus(tempx, tempy, EMPTY);
-            int snakex, snakey, i;
-            for (i = 1; i < gameSize * gameSize; i++) {
-                if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
-                    break;
-                }
-                grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), EMPTY);
-
-                snakex = movedSnake.getSnake(i, 0);
-                snakey = movedSnake.getSnake(i, 1);
-                movedSnake.setSnake(i, 0, tempx);
-                movedSnake.setSnake(i, 1, tempy);
-                tempx = snakex;
-                tempy = snakey;
-            }
-
-            for (i = 0; i < gameSize * gameSize; i++) {
-                if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
-                    break;
-
-                }
-                grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
+        for (i = 0; i < gameSize * gameSize; i++) {
+            if ((movedSnake.getSnake(i, 0) < 0) || (movedSnake.getSnake(i, 1) < 0)) {
+                break;
 
             }
+            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
 
-            bonusTime--;
-            if (bonusTime == 0) {
-                for (i = 0; i < gameSize; i++) {
-                    for (int j = 0; j < gameSize; j++) {
-                        if (grid.getStatus(i, j) == BIG_FOOD_BONUS)
-                            grid.setStatus(i, j, EMPTY);
-                    }
-                }
-            }
-            malusTime--;
-            if (malusTime == 0) {
-                for (i = 0; i < gameSize; i++) {
-                    for (int j = 0; j < gameSize; j++) {
-                        if (grid.getStatus(i, j) == FOOD_MALUS)
-                            grid.setStatus(i, j, EMPTY);
-                    }
+        }
+
+        // Place bonus fruit if enough normal fruit have been eaten.
+        bonusTime--;
+        if (bonusTime == 0) {
+            for (i = 0; i < gameSize; i++) {
+                for (int j = 0; j < gameSize; j++) {
+                    if (grid.getStatus(i, j) == BIG_FOOD_BONUS)
+                        grid.setStatus(i, j, EMPTY);
                 }
             }
-            if (grow > 0) {
-                movedSnake.setSnake(i, 0, tempx);
-                movedSnake.setSnake(i, 1, tempy);
-                grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
-
-                if (score % 10 == 0) {
-                    placeBonus(BIG_FOOD_BONUS);
-                    bonusTime = 100;
+        }
+        
+        // Places malicious fruit if enough normal fruit have been eaten.
+        malusTime--;
+        if (malusTime == 0) {
+            for (i = 0; i < gameSize; i++) {
+                for (int j = 0; j < gameSize; j++) {
+                    if (grid.getStatus(i, j) == FOOD_MALUS)
+                        grid.setStatus(i, j, EMPTY);
                 }
-                if (score % 5 == 0) {
-                    placeMalus(FOOD_MALUS);
-                    malusTime = 100;
-                }
-                grow--;
             }
+        }
+        
+        // Increase the size of the snake if it has eaten a fruit.
+        if (grow > 0) {
+            movedSnake.setSnake(i, 0, tempx);
+            movedSnake.setSnake(i, 1, tempy);
+            grid.setStatus(movedSnake.getSnake(i, 0), movedSnake.getSnake(i, 1), SNAKE);
+
+            if (score % 10 == 0) {
+                placeBonus(BIG_FOOD_BONUS);
+                bonusTime = 100;
+            }
+            if (score % 5 == 0) {
+                placeMalus(FOOD_MALUS);
+                malusTime = 100;
+            }
+            grow--;
+        }
     }
 
+    /**
+     * Place bonus fruit on the grid.
+     * @param bonus_type
+     * @author Norris Alrichani - Refactored the original code.
+     */
     private void placeBonus(int bonus_type) {
         int x = (int) (Math.random() * 1000) % gameSize;
         int y = (int) (Math.random() * 1000) % gameSize;
@@ -398,6 +429,11 @@ public class Game implements KeyListener, WindowListener {
         }
     }
 
+    /**
+     * Place malicious fruit on the grid.
+     * @param malus_type
+     * @author Norris Alrichani - Refactored the original code.
+     */
     private void placeMalus(int malus_type) {
         int x = (int) (Math.random() * 1000) % gameSize;
         int y = (int) (Math.random() * 1000) % gameSize;
@@ -538,7 +574,7 @@ public class Game implements KeyListener, WindowListener {
             case KeyEvent.VK_SPACE:
                 if (!game_over)
                     paused = !paused;
-                    gameExecutor.shutdown();
+                gameExecutor.shutdown();
                 break;
         }
     }

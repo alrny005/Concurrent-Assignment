@@ -15,7 +15,7 @@ public class GameLobby implements Runnable {
 
 
     int count = 0;
-    public synchronized void Add(ConcurrentHashMap<Integer,Client> temp){
+    public synchronized void Add(){
         while (count == 1){
             try {
                 this.wait();
@@ -23,7 +23,7 @@ public class GameLobby implements Runnable {
                 e.printStackTrace();
             }
         }
-        lobby = temp;
+        lobby.put(user,new Client("user"+user, "pass"+user));
         count += 1;
         this.notifyAll();
 
@@ -34,7 +34,7 @@ public class GameLobby implements Runnable {
      */
     @Override
     public void run() {
-        lobby.put(user,new Client("user"+user, "pass"+user));
+        Add();
     }
 
 }
